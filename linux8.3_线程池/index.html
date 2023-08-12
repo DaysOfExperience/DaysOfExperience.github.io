@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - My New Hugo Site</title><meta name="Description" content="This is my cool site"><meta property="og:title" content="" />
+<meta property="og:description" content="线程池: 一种线程使用模式。线程过多会带来调度开销，进而影响缓存局部性和整体性能。而线程池维护着多个线程，等待着监督管理者分配可并发执行的任务。**这避免了在处理短时间任务时创建与销毁线程的代价。****线程池不仅能够保证内核的充分利用，还能防止过分调度。**可用线程数量应该取决于可用的并发处理器、处理器内核、内存、网络sockets等的数量。
+线程池的应用场景: 需要大量的线程来完成任务，且完成任务的时间比较短。 WEB服务器完成网页请求这样的任务，使用线程池技术是非常合适的。因为单个任务小，而任务数量巨大，你可以想象一个热门网站的点击次数。 但对于长时间的任务，比如一个Telnet连接请求，线程池的优点就不明显了。因为Telnet会话时间比线程的创建时间大多了。 对性能要求苛刻的应用 比如要求服务器迅速响应客户请求。 接受突发性的大量请求，但不至于使服务器因此产生大量线程的应用。 突发性大量客户请求，在没有线程池情况下，将产生大量线程，虽然理论上大部分操作系统线程数目最大值不是问题。但短时间内产生大量线程可能使内存到达极限， 出现错误 线程池的种类: 线程池示例: 创建固定数量线程的线程池，循环从任务队列中获取任务对象。 获取到任务对象后，执行任务对象中的任务接口 C&#43;&#43;实现简单的线程池 tiny线程池
+log.hpp就是一个打印日志的功能。mutex.hpp实现了一个RAII式的加锁解锁类，参数是一个锁指针。
+task.hpp就是对线程池内线程执行的任务的一个简单模拟。main函数生产task，调用线程池的pushTask方法，将task放入线程池的任务队列中，线程池内等待任务的线程被signal然后执行任务。
+thread.hpp对于线程的封装，线程的数据成员有线程名，执行例程方法，参数，tid。就是一个很简单的封装。并不是构造时直接pthread_create，而是需要调用一个create方法。线程池构造时构造若干个thread对象。线程池的run方法中调用线程的create方法，使线程执行routine等待任务队列中的任务。
+线程池的基本原理就是生产消费模型，main函数充当生产者，放入线程池的任务队列缓冲区中，然后利用条件变量唤醒pthread_cond_wait的线程，线程执行任务。这里需要加锁保护临界资源，在生产消费之间，消费消费之间都需要加锁实现互斥(因为此处仅main在生产，故没有生产生产之间的关系，但是也实现了互斥)，还需要条件变量实现同步机制。
+对于routine函数，因为类的普通成员方法有一个隐藏的this指针参数，因此不能直接作为线程的执行例程方法（void*(*p)(void*)），因此需要将其定为static，但是static方法不能访问非static数据成员。也就导致了不能直接访问task_queue_，mutex，cond等数据成员，如果想直接访问，需要加static。但是如果这样的话，所有线程池都共用一个任务列表，锁，条件变量是不合适的。
+解决方法是：将routine设为static方法，然后线程传参时传一个线程池对象的this指针过去，static成员方法不能访问非static数据成员的原因就是因为没有this指针。现在传一个过去，这个routine就可以访问任何非static数据成员和非static方法了。
+有关加锁，和条件变量的使用，就是常规的生产消费模型中锁和条件变量的使用。
+单例模式 单例模式是什么 单例模式是一种 &ldquo;经典的, 常用的, 常考的&rdquo; 设计模式.
+单例模式的特点 某些类, 只应该具有一个对象(实例), 就称之为单例.例如一个男人只能有一个媳妇.
+在很多服务器开发场景中, 经常需要让服务器加载很多的数据 (上百G) 到内存中. 此时往往要用一个单例的类来管理这些数据.
+饿汉模式与懒汉模式 分为懒汉模式和饿汉模式。懒汉方式最核心的思想是 &ldquo;延时加载&rdquo;. 从而能够优化服务器的启动速度.
+饿汉方式实现单例模式 1 2 3 4 5 6 7 8 9 template &lt;typename T&gt; class Singleton { private: static T data; public: static T* GetInstance() { return &amp;data; } }; 只要通过 Singleton 这个包装类来使用 T 对象, 则一个进程中只有一个T对象的实例。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" /><meta property="og:image" content="http://example.org/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://example.org/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="线程池: 一种线程使用模式。线程过多会带来调度开销，进而影响缓存局部性和整体性能。而线程池维护着多个线程，等待着监督管理者分配可并发执行的任务。**这避免了在处理短时间任务时创建与销毁线程的代价。****线程池不仅能够保证内核的充分利用，还能防止过分调度。**可用线程数量应该取决于可用的并发处理器、处理器内核、内存、网络sockets等的数量。
+线程池的应用场景: 需要大量的线程来完成任务，且完成任务的时间比较短。 WEB服务器完成网页请求这样的任务，使用线程池技术是非常合适的。因为单个任务小，而任务数量巨大，你可以想象一个热门网站的点击次数。 但对于长时间的任务，比如一个Telnet连接请求，线程池的优点就不明显了。因为Telnet会话时间比线程的创建时间大多了。 对性能要求苛刻的应用 比如要求服务器迅速响应客户请求。 接受突发性的大量请求，但不至于使服务器因此产生大量线程的应用。 突发性大量客户请求，在没有线程池情况下，将产生大量线程，虽然理论上大部分操作系统线程数目最大值不是问题。但短时间内产生大量线程可能使内存到达极限， 出现错误 线程池的种类: 线程池示例: 创建固定数量线程的线程池，循环从任务队列中获取任务对象。 获取到任务对象后，执行任务对象中的任务接口 C&#43;&#43;实现简单的线程池 tiny线程池
+log.hpp就是一个打印日志的功能。mutex.hpp实现了一个RAII式的加锁解锁类，参数是一个锁指针。
+task.hpp就是对线程池内线程执行的任务的一个简单模拟。main函数生产task，调用线程池的pushTask方法，将task放入线程池的任务队列中，线程池内等待任务的线程被signal然后执行任务。
+thread.hpp对于线程的封装，线程的数据成员有线程名，执行例程方法，参数，tid。就是一个很简单的封装。并不是构造时直接pthread_create，而是需要调用一个create方法。线程池构造时构造若干个thread对象。线程池的run方法中调用线程的create方法，使线程执行routine等待任务队列中的任务。
+线程池的基本原理就是生产消费模型，main函数充当生产者，放入线程池的任务队列缓冲区中，然后利用条件变量唤醒pthread_cond_wait的线程，线程执行任务。这里需要加锁保护临界资源，在生产消费之间，消费消费之间都需要加锁实现互斥(因为此处仅main在生产，故没有生产生产之间的关系，但是也实现了互斥)，还需要条件变量实现同步机制。
+对于routine函数，因为类的普通成员方法有一个隐藏的this指针参数，因此不能直接作为线程的执行例程方法（void*(*p)(void*)），因此需要将其定为static，但是static方法不能访问非static数据成员。也就导致了不能直接访问task_queue_，mutex，cond等数据成员，如果想直接访问，需要加static。但是如果这样的话，所有线程池都共用一个任务列表，锁，条件变量是不合适的。
+解决方法是：将routine设为static方法，然后线程传参时传一个线程池对象的this指针过去，static成员方法不能访问非static数据成员的原因就是因为没有this指针。现在传一个过去，这个routine就可以访问任何非static数据成员和非static方法了。
+有关加锁，和条件变量的使用，就是常规的生产消费模型中锁和条件变量的使用。
+单例模式 单例模式是什么 单例模式是一种 &ldquo;经典的, 常用的, 常考的&rdquo; 设计模式.
+单例模式的特点 某些类, 只应该具有一个对象(实例), 就称之为单例.例如一个男人只能有一个媳妇.
+在很多服务器开发场景中, 经常需要让服务器加载很多的数据 (上百G) 到内存中. 此时往往要用一个单例的类来管理这些数据.
+饿汉模式与懒汉模式 分为懒汉模式和饿汉模式。懒汉方式最核心的思想是 &ldquo;延时加载&rdquo;. 从而能够优化服务器的启动速度.
+饿汉方式实现单例模式 1 2 3 4 5 6 7 8 9 template &lt;typename T&gt; class Singleton { private: static T data; public: static T* GetInstance() { return &amp;data; } }; 只要通过 Singleton 这个包装类来使用 T 对象, 则一个进程中只有一个T对象的实例。"/>
+<meta name="application-name" content="My cool site">
+<meta name="apple-mobile-web-app-title" content="My cool site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" /><link rel="prev" href="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80/" /><link rel="next" href="http://example.org/linux8.2_%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%9E%8B/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/example.org\/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0\/"
+        },"genre": "posts","wordcount":  249 ,
+        "url": "http:\/\/example.org\/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0\/","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "xxxx"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="My New Hugo Site"></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="My New Hugo Site"></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>xxxx</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;249 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#单例模式是什么">单例模式是什么</a></li>
+    <li><a href="#单例模式的特点">单例模式的特点</a></li>
+    <li><a href="#饿汉模式与懒汉模式">饿汉模式与懒汉模式</a>
+      <ul>
+        <li><a href="#饿汉方式实现单例模式">饿汉方式实现单例模式</a></li>
+        <li><a href="#懒汉方式实现单例模式">懒汉方式实现单例模式</a></li>
+        <li><a href="#懒汉方式实现单例模式线程安全版本">懒汉方式实现单例模式(线程安全版本)</a></li>
+      </ul>
+    </li>
+    <li><a href="#线程池的单例模式">线程池的单例模式</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#stl中的容器是否是线程安全的">STL中的容器是否是线程安全的?</a></li>
+    <li><a href="#智能指针是否是线程安全的">智能指针是否是线程安全的?</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="线程池">线程池:</h1>
+<p>一种线程使用模式。线程过多会带来调度开销，进而影响缓存局部性和整体性能。而<strong>线程池维护着多个线程</strong>，等待着监督管理者分配可并发执行的任务。**这避免了在处理短时间任务时创建与销毁线程的代价。****线程池不仅能够保证内核的充分利用，还能防止过分调度。**可用线程数量应该取决于可用的并发处理器、处理器内核、内存、网络sockets等的数量。</p>
+<h1 id="线程池的应用场景">线程池的应用场景:</h1>
+<ol>
+<li>需要大量的线程来完成任务，且完成任务的时间比较短。
+WEB服务器完成网页请求这样的任务，使用线程池技术是非常合适的。因为单个任务小，而任务数量巨大，你可以想象一个热门网站的点击次数。 但对于长时间的任务，比如一个Telnet连接请求，线程池的优点就不明显了。因为Telnet会话时间比线程的创建时间大多了。</li>
+<li>对性能要求苛刻的应用
+比如要求服务器迅速响应客户请求。</li>
+<li>接受突发性的大量请求，但不至于使服务器因此产生大量线程的应用。
+突发性大量客户请求，在没有线程池情况下，将产生大量线程，虽然理论上大部分操作系统线程数目最大值不是问题。但短时间内产生大量线程可能使内存到达极限， 出现错误</li>
+</ol>
+<h1 id="线程池的种类">线程池的种类:</h1>
+<h1 id="线程池示例">线程池示例:</h1>
+<ol>
+<li>创建固定数量线程的线程池，循环从任务队列中获取任务对象。</li>
+<li>获取到任务对象后，执行任务对象中的任务接口</li>
+</ol>
+<h1 id="c实现简单的线程池">C++实现简单的线程池</h1>
+<p><a href="https://github.com/DaysOfExperience/Linux_System_Programming/tree/main/Thread/ThreadPool%e7%ba%bf%e7%a8%8b%e6%b1%a0" target="_blank" rel="noopener noreffer ">tiny线程池</a></p>
+<blockquote>
+<p>log.hpp就是一个打印日志的功能。mutex.hpp实现了一个RAII式的加锁解锁类，参数是一个锁指针。</p>
+<p>task.hpp就是对线程池内线程执行的任务的一个简单模拟。main函数生产task，调用线程池的pushTask方法，将task放入线程池的任务队列中，线程池内等待任务的线程被signal然后执行任务。</p>
+<p>thread.hpp对于线程的封装，线程的数据成员有线程名，执行例程方法，参数，tid。就是一个很简单的封装。并不是构造时直接pthread_create，而是需要调用一个create方法。线程池构造时构造若干个thread对象。线程池的run方法中调用线程的create方法，使线程执行routine等待任务队列中的任务。</p>
+</blockquote>
+<p>线程池的基本原理就是生产消费模型，main函数充当生产者，放入线程池的任务队列缓冲区中，然后利用条件变量唤醒pthread_cond_wait的线程，线程执行任务。这里需要加锁保护临界资源，在生产消费之间，消费消费之间都需要加锁实现互斥(因为此处仅main在生产，故没有生产生产之间的关系，但是也实现了互斥)，还需要条件变量实现同步机制。</p>
+<p>对于routine函数，因为类的普通成员方法有一个隐藏的this指针参数，因此不能直接作为线程的执行例程方法（void*(*p)(void*)），因此需要将其定为static，但是static方法不能访问非static数据成员。也就导致了不能直接访问task_queue_，mutex，cond等数据成员，如果想直接访问，需要加static。但是如果这样的话，所有线程池都共用一个任务列表，锁，条件变量是不合适的。</p>
+<p>解决方法是：将routine设为static方法，然后线程传参时传一个线程池对象的this指针过去，static成员方法不能访问非static数据成员的原因就是因为没有this指针。现在传一个过去，这个routine就可以访问任何非static数据成员和非static方法了。</p>
+<p>有关加锁，和条件变量的使用，就是常规的生产消费模型中锁和条件变量的使用。</p>
+<h1 id="单例模式">单例模式</h1>
+<h2 id="单例模式是什么">单例模式是什么</h2>
+<p>单例模式是一种 &ldquo;经典的, 常用的, 常考的&rdquo; 设计模式.</p>
+<h2 id="单例模式的特点">单例模式的特点</h2>
+<p>某些类, 只应该具有一个对象(实例), 就称之为单例.例如一个男人只能有一个媳妇.</p>
+<p>在很多服务器开发场景中, 经常需要让服务器加载很多的数据 (上百G) 到内存中. 此时往往要用一个单例的类来管理这些数据.</p>
+<h2 id="饿汉模式与懒汉模式">饿汉模式与懒汉模式</h2>
+<p>分为懒汉模式和饿汉模式。懒汉方式最核心的思想是 &ldquo;延时加载&rdquo;. 从而能够优化服务器的启动速度.</p>
+<h3 id="饿汉方式实现单例模式">饿汉方式实现单例模式</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Singleton</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="n">T</span> <span class="n">data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="n">T</span><span class="o">*</span> <span class="n">GetInstance</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>只要通过 Singleton 这个包装类来使用 T 对象, 则一个进程中只有一个T对象的实例。</p>
+<h3 id="懒汉方式实现单例模式">懒汉方式实现单例模式</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Singleton</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="n">T</span><span class="o">*</span> <span class="n">inst</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="n">T</span><span class="o">*</span> <span class="n">GetInstance</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">inst</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">inst</span> <span class="o">=</span> <span class="k">new</span> <span class="n">T</span><span class="p">();</span>   <span class="c1">// 此时再进行构造此单例对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">inst</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>存在一个严重的问题, 线程不安全. 第一次调用 GetInstance 的时候, 如果两个线程同时调用, 可能会创建出两份 T 对象的实例. 但是后续再次调用, 就没有问题了.</p>
+<h3 id="懒汉方式实现单例模式线程安全版本">懒汉方式实现单例模式(线程安全版本)</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 懒汉模式, 线程安全
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Singleton</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">volatile</span> <span class="k">static</span> <span class="n">T</span><span class="o">*</span> <span class="n">inst</span><span class="p">;</span> <span class="c1">// 需要设置 volatile 关键字, 否则可能被编译器优化.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="n">T</span><span class="o">*</span> <span class="n">GetInstance</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">inst</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// 双重判定空指针, 降低锁冲突的概率, 提高性能.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">lock</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span> <span class="c1">// 使用互斥锁, 保证多线程情况下也只调用一次 new.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span> <span class="p">(</span><span class="n">inst</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            	<span class="n">inst</span> <span class="o">=</span> <span class="k">new</span> <span class="n">T</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">lock</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">inst</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意事项:</p>
+<ol>
+<li>加锁解锁的位置</li>
+<li>双重 if 判定, 避免不必要的锁竞争</li>
+<li>volatile关键字防止过度优化</li>
+</ol>
+<h2 id="线程池的单例模式">线程池的单例模式</h2>
+<blockquote>
+<p>将构造设为private，拷贝和赋值设为delete。对外提供一个static方法，内部有一个static对象指针（设为单例模式的类的对象指针）。static方法用于获取这个static对象指针。也就是static ThreadPool<T>* threadpool_ptr。在static接口getThreadPool中，实现懒汉模式逻辑。</p>
+<p>getThreadPool有一个线程安全问题，也就是多线程同时调用此方法时，可能出现内存中创建出多份单例对象的情况。后面再调用时，因为threadpool_ptr指针不为nullptr，就不会出现这种情况了。</p>
+<p>为了避免上述情况发生，需要加锁保护。</p>
+<p>加锁保护之后，可以有一个优化。也就是再套一层判断。因为只有第一批同时进入这个函数的线程可能有安全问题，后面当对象创建出来之后，单例指针不为nullptr，再进入方法中不再需要加锁解锁这样的过程。因此又加了一层判断，减少后期无意义的竞争锁，提高效率。</p>
+</blockquote>
+<h1 id="stl智能指针和线程安全">STL,智能指针和线程安全</h1>
+<h2 id="stl中的容器是否是线程安全的">STL中的容器是否是线程安全的?</h2>
+<p><strong>不是</strong>. 原因是, STL的设计初衷是将性能挖掘到极致, 而一旦涉及到加锁保证线程安全, 会对性能造成巨大的影响. 而且对于不同的容器, 加锁方式的不同, 性能可能也不同(例如hash表的锁表和锁桶). 因此 STL 默认不是线程安全. <strong>如果需要在多线程环境下使用, 往往需要调用者自行保证线程安全.</strong></p>
+<h2 id="智能指针是否是线程安全的">智能指针是否是线程安全的?</h2>
+<p>对于 unique_ptr, 由于只是在当前代码块范围内生效, 因此不涉及线程安全问题.</p>
+<p>对于 shared_ptr, 多个对象需要共用一个引用计数变量, 所以会存在线程安全问题. 但是标准库实现的时候考虑到了这个问题, 基于原子操作(CAS)的方式保证shared_ptr能够高效, 原子的操作引用计数.</p>
+<h1 id="其他常见的各种锁">其他常见的各种锁</h1>
+<h1 id="读者写者问题选学">读者写者问题［选学］</h1>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" data-title="" data-via="xxxx"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" data-title=""><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" data-title=""><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://example.org/linux8.3_%E7%BA%BF%E7%A8%8B%E6%B1%A0/" data-title=""><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80/" class="prev" rel="prev" title=""><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i></a>
+            <a href="/linux8.2_%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%9E%8B/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.115.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">xxxx</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - My New Hugo Site</title><meta name="Description" content="This is my cool site"><meta property="og:title" content="" />
+<meta property="og:description" content="7_进程信号 信号的基本认识 Linux信号机制：
+它是一种异步的通知机制，用来提醒进程一个事件已经发生。
+Linux操作系统中，有编号为1~31的31个普通信号，编号为34~64的31个实时信号，共62个信号。日常中只会涉及和使用到普通信号。故下方对信号的学习仅对于1~31的普通信号。
+每个信号都有一个编号和一个宏定义名称，本质上，这些都是通过#define的形式定义的。也就是用一个int型变量去代替某特定信号。（编译之后，这些宏定义都会变为int整型）
+进程处理信号的三种方式 信号的接收方一定是进程，因为信号就是OS用来提醒进程某个事件已经发生。故，进程在接收到信号之后，一定要处理这个信号。
+执行该信号的默认处理动作。
+忽略该信号。
+提供一个信号处理函数，要求内核在处理该信号时切换到用户态执行这个处理函数，这种方式称为捕捉（Catch）一个信号。 （其实就是程序员自定义进程对某信号的处理方法，该方法存储在用户代码中）
+简单来说就是默认，忽略，自定义捕捉。
+信号产生：产生信号的若干种方式 1.通过键盘产生信号： ctrl &#43; c：通过键盘组合键向前台进程发送2号SIGINT信号。
+ctrl &#43; \：通过键盘组合键向前台进程发送3号SIGQUIT信号。
+理解：键盘是通过中断的方式工作的。输入某组合键-&gt;OS解释识别组合键-&gt;查找进程列表-&gt;前台运行的进程-&gt;OS将前台运行进程的PCB(task_struct)中的pending信号集位图中组合键对应的信号所对应的比特位由0置1（pending 信号集本质是一个位图结构，见信号保存。）（其实最后一步一句话就是：OS向前台进程发送对应信号，发送信号的本质就是如此）
+有关前台进程与后台进程： Ctrl-C 产生的信号只能发给前台进程。一个命令后面加个&amp;可以放到后台运行（如 ./mysignal &amp;）,这样Shell不必等待进程 结束就可以接受新的命令,启动新的进程。Shell可以同时运行一个前台进程和任意多个后台进程,只有前台进程才能接到像 Ctrl-C 这种控制键产生的信号
+前台进程在运行过程中用户随时可能按下 Ctrl-C 而产生一个信号,也就是说该进程的用户空间代码执行 到任何地方都有可能收到 SIGINT 信号而终止,所以信号相对于进程的控制流程来说是**异步(Asynchronous)**的。
+2.通过系统调用接口产生信号： int kill(pid_t pid, int signo); 向指定进程发送指定信号
+int raise(int signo); 向当前进程发送指定信号
+void abort(void); 向当前进程发送6号SIGABRT信号
+Linux还有一个kill命令，就是通过调用kill函数实现的。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 // 通过系统调用发送信号 void handler(int signo) { std::cout &lt;&lt; &#34;进程收到了一个&#34; &lt;&lt; signo &lt;&lt; &#34;号信号&#34; &lt;&lt; std::endl; } int main() { signal(2, handler); // 捕捉下方kill 和 raise发送的信号 signal(SIGABRT, handler); // 捕捉abort发送的6号SIGABRT信号 kill(getpid(), 2); raise(2); abort(); // 向当前进程发送SIGABRT信号，使其异常终止（默认） while(true) sleep(1); return 0; } 如上图，对6号SIGABRT信号明明捕捉了但是还是中止了。 这是一个很奇怪的现象，查了stack overflow：However, I cannot find any corroborating evidence of that behavior in the signal man page, which clearly states that The signals SIGKILL and SIGSTOP cannot be caught, blocked, or ignored but makes no similar mention for SIGABRT." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" /><meta property="og:image" content="http://example.org/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://example.org/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="7_进程信号 信号的基本认识 Linux信号机制：
+它是一种异步的通知机制，用来提醒进程一个事件已经发生。
+Linux操作系统中，有编号为1~31的31个普通信号，编号为34~64的31个实时信号，共62个信号。日常中只会涉及和使用到普通信号。故下方对信号的学习仅对于1~31的普通信号。
+每个信号都有一个编号和一个宏定义名称，本质上，这些都是通过#define的形式定义的。也就是用一个int型变量去代替某特定信号。（编译之后，这些宏定义都会变为int整型）
+进程处理信号的三种方式 信号的接收方一定是进程，因为信号就是OS用来提醒进程某个事件已经发生。故，进程在接收到信号之后，一定要处理这个信号。
+执行该信号的默认处理动作。
+忽略该信号。
+提供一个信号处理函数，要求内核在处理该信号时切换到用户态执行这个处理函数，这种方式称为捕捉（Catch）一个信号。 （其实就是程序员自定义进程对某信号的处理方法，该方法存储在用户代码中）
+简单来说就是默认，忽略，自定义捕捉。
+信号产生：产生信号的若干种方式 1.通过键盘产生信号： ctrl &#43; c：通过键盘组合键向前台进程发送2号SIGINT信号。
+ctrl &#43; \：通过键盘组合键向前台进程发送3号SIGQUIT信号。
+理解：键盘是通过中断的方式工作的。输入某组合键-&gt;OS解释识别组合键-&gt;查找进程列表-&gt;前台运行的进程-&gt;OS将前台运行进程的PCB(task_struct)中的pending信号集位图中组合键对应的信号所对应的比特位由0置1（pending 信号集本质是一个位图结构，见信号保存。）（其实最后一步一句话就是：OS向前台进程发送对应信号，发送信号的本质就是如此）
+有关前台进程与后台进程： Ctrl-C 产生的信号只能发给前台进程。一个命令后面加个&amp;可以放到后台运行（如 ./mysignal &amp;）,这样Shell不必等待进程 结束就可以接受新的命令,启动新的进程。Shell可以同时运行一个前台进程和任意多个后台进程,只有前台进程才能接到像 Ctrl-C 这种控制键产生的信号
+前台进程在运行过程中用户随时可能按下 Ctrl-C 而产生一个信号,也就是说该进程的用户空间代码执行 到任何地方都有可能收到 SIGINT 信号而终止,所以信号相对于进程的控制流程来说是**异步(Asynchronous)**的。
+2.通过系统调用接口产生信号： int kill(pid_t pid, int signo); 向指定进程发送指定信号
+int raise(int signo); 向当前进程发送指定信号
+void abort(void); 向当前进程发送6号SIGABRT信号
+Linux还有一个kill命令，就是通过调用kill函数实现的。
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 // 通过系统调用发送信号 void handler(int signo) { std::cout &lt;&lt; &#34;进程收到了一个&#34; &lt;&lt; signo &lt;&lt; &#34;号信号&#34; &lt;&lt; std::endl; } int main() { signal(2, handler); // 捕捉下方kill 和 raise发送的信号 signal(SIGABRT, handler); // 捕捉abort发送的6号SIGABRT信号 kill(getpid(), 2); raise(2); abort(); // 向当前进程发送SIGABRT信号，使其异常终止（默认） while(true) sleep(1); return 0; } 如上图，对6号SIGABRT信号明明捕捉了但是还是中止了。 这是一个很奇怪的现象，查了stack overflow：However, I cannot find any corroborating evidence of that behavior in the signal man page, which clearly states that The signals SIGKILL and SIGSTOP cannot be caught, blocked, or ignored but makes no similar mention for SIGABRT."/>
+<meta name="application-name" content="My cool site">
+<meta name="apple-mobile-web-app-title" content="My cool site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" /><link rel="prev" href="http://example.org/linux8.0_linux%E5%A4%9A%E7%BA%BF%E7%A8%8B/" /><link rel="next" href="http://example.org/linux6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/example.org\/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7\/"
+        },"genre": "posts","wordcount":  1699 ,
+        "url": "http:\/\/example.org\/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7\/","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "xxxx"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="My New Hugo Site"></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="My New Hugo Site"></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>xxxx</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1699 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;8 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#信号的基本认识">信号的基本认识</a></li>
+    <li><a href="#进程处理信号的三种方式">进程处理信号的三种方式</a></li>
+    <li><a href="#信号产生产生信号的若干种方式">信号产生：产生信号的若干种方式</a>
+      <ul>
+        <li><a href="#1通过键盘产生信号">1.通过键盘产生信号：</a></li>
+        <li><a href="#2通过系统调用接口产生信号">2.通过系统调用接口产生信号：</a></li>
+        <li><a href="#3由软件条件产生信号">3.由软件条件产生信号：</a>
+          <ul>
+            <li><a href="#例一进程间通过管道通信时因软件条件而产生sigpipe信号">例一：进程间通过管道通信时，因软件条件而产生SIGPIPE信号。</a></li>
+            <li><a href="#例二alarm函数因软件条件产生sigalrm信号">例二：alarm函数，因软件条件产生SIGALRM信号。</a></li>
+          </ul>
+        </li>
+        <li><a href="#4因硬件异常产生信号">4.因硬件异常产生信号：</a>
+          <ul>
+            <li><a href="#例一除零操作触发硬件异常os发送8号sigfpe信号">例一：除零操作，触发硬件异常，OS发送8号SIGFPE信号</a></li>
+            <li><a href="#例二进程访问非法内存地址触发mmu硬件异常os发送11号sigsegv信号">例二：进程访问非法内存地址，触发MMU硬件异常，OS发送11号SIGSEGV信号</a></li>
+          </ul>
+        </li>
+        <li><a href="#信号产生总结">信号产生总结</a></li>
+      </ul>
+    </li>
+    <li><a href="#核心转储-core-dump">核心转储-Core Dump</a>
+      <ul>
+        <li><a href="#核心转储概念">核心转储概念</a></li>
+        <li><a href="#核心转储作用">核心转储作用</a></li>
+        <li><a href="#进程等待waitwaitpid的core-dump标记位">进程等待wait/waitpid的core dump标记位</a></li>
+      </ul>
+    </li>
+    <li><a href="#信号保存进程如何保存收到的信号">信号保存：进程如何保存收到的信号</a>
+      <ul>
+        <li><a href="#为什么要进行信号保存">为什么要进行信号保存</a></li>
+        <li><a href="#信号相关概念">信号相关概念</a></li>
+        <li><a href="#进程保存信号的方式内核中的表示">进程保存信号的方式（内核中的表示）</a></li>
+        <li><a href="#sigset_t">sigset_t</a>
+          <ul>
+            <li><a href="#位图信号集sigset_t操作函数">位图信号集sigset_t操作函数</a></li>
+          </ul>
+        </li>
+        <li><a href="#pending信号集block信号集handler方法处理表相关的函数接口">pending信号集，block信号集，handler方法处理表相关的函数接口</a></li>
+        <li><a href="#编码验证">编码验证</a></li>
+      </ul>
+    </li>
+    <li><a href="#信号处理进程处理信号的时机和流程">信号处理：进程处理信号的时机和流程</a>
+      <ul>
+        <li><a href="#进程什么时候处理信号">进程什么时候处理信号</a></li>
+        <li><a href="#进程处理信号的流程">进程处理信号的流程</a></li>
+        <li><a href="#捕捉信号的流程">捕捉信号的流程</a></li>
+        <li><a href="#信号捕捉方法20sigaction">信号捕捉方法2.0：sigaction</a></li>
+      </ul>
+    </li>
+    <li><a href="#可重入函数vs不可重入函数">可重入函数vs不可重入函数</a></li>
+    <li><a href="#volatile">volatile</a></li>
+    <li><a href="#sigchid">SIGCHID</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="7_进程信号">7_进程信号</h1>
+<h2 id="信号的基本认识">信号的基本认识</h2>
+<p>Linux信号机制：</p>
+<p><strong>它是一种异步的通知机制，用来提醒进程一个事件已经发生。</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/82d4549c14dae2f14640a2298077c90a.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/82d4549c14dae2f14640a2298077c90a.png, https://img-blog.csdnimg.cn/img_convert/82d4549c14dae2f14640a2298077c90a.png 1.5x, https://img-blog.csdnimg.cn/img_convert/82d4549c14dae2f14640a2298077c90a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/82d4549c14dae2f14640a2298077c90a.png"
+        title="img" /></p>
+<p>Linux操作系统中，有编号为1~31的31个普通信号，编号为34~64的31个实时信号，共62个信号。日常中只会涉及和使用到普通信号。故下方对信号的学习仅对于1~31的普通信号。</p>
+<p>每个信号都有一个编号和一个宏定义名称，本质上，这些都是通过#define的形式定义的。也就是用一个int型变量去代替某特定信号。（编译之后，这些宏定义都会变为int整型）</p>
+<img src="https://img-blog.csdnimg.cn/img_convert/00cf3772f776d8e8836cac4e36632dd2.png" alt="img" style="zoom:80%;" />
+<h2 id="进程处理信号的三种方式">进程处理信号的三种方式</h2>
+<p>信号的接收方一定是进程，因为信号就是OS用来提醒进程某个事件已经发生。故，进程在接收到信号之后，一定要处理这个信号。</p>
+<ol>
+<li>
+<p>执行该信号的默认处理动作。</p>
+</li>
+<li>
+<p>忽略该信号。</p>
+</li>
+<li>
+<p>提供一个信号处理函数，要求内核在处理该信号时切换到用户态执行这个处理函数，这种方式称为捕捉（Catch）一个信号。
+（其实就是程序员自定义进程对某信号的处理方法，该方法存储在用户代码中）</p>
+</li>
+</ol>
+<p>简单来说就是默认，忽略，自定义捕捉。</p>
+<h2 id="信号产生产生信号的若干种方式">信号产生：产生信号的若干种方式</h2>
+<h3 id="1通过键盘产生信号">1.通过键盘产生信号：</h3>
+<p>ctrl + c：通过键盘组合键向前台进程发送2号SIGINT信号。</p>
+<p>ctrl + \：通过键盘组合键向前台进程发送3号SIGQUIT信号。</p>
+<blockquote>
+<p>理解：键盘是通过中断的方式工作的。输入某组合键-&gt;OS解释识别组合键-&gt;查找进程列表-&gt;前台运行的进程-&gt;OS将前台运行进程的PCB(task_struct)中的pending信号集位图中组合键对应的信号所对应的比特位由0置1（pending 信号集本质是一个位图结构，见信号保存。）（其实最后一步一句话就是：OS向前台进程发送对应信号，发送信号的本质就是如此）</p>
+</blockquote>
+<blockquote>
+<p>有关前台进程与后台进程： Ctrl-C 产生的信号只能发给前台进程。一个命令后面加个&amp;可以放到后台运行（如 ./mysignal &amp;）,这样Shell不必等待进程 结束就可以接受新的命令,启动新的进程。Shell可以同时运行一个前台进程和任意多个后台进程,只有前台进程才能接到像 Ctrl-C 这种控制键产生的信号</p>
+</blockquote>
+<p>前台进程在运行过程中用户随时可能按下 Ctrl-C 而产生一个信号,也就是说该进程的用户空间代码执行 到任何地方都有可能收到 SIGINT 信号而终止,所以信号相对于进程的控制流程来说是**异步(Asynchronous)**的。</p>
+<h3 id="2通过系统调用接口产生信号">2.通过系统调用接口产生信号：</h3>
+<p>int kill(pid_t pid, int signo); 向指定进程发送指定信号</p>
+<p>int raise(int signo); 向当前进程发送指定信号</p>
+<p>void abort(void); 向当前进程发送6号SIGABRT信号</p>
+<p>Linux还有一个kill命令，就是通过调用kill函数实现的。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 通过系统调用发送信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>  <span class="c1">// 捕捉下方kill 和 raise发送的信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">signal</span><span class="p">(</span><span class="n">SIGABRT</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>  <span class="c1">// 捕捉abort发送的6号SIGABRT信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">kill</span><span class="p">(</span><span class="n">getpid</span><span class="p">(),</span> <span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">raise</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">abort</span><span class="p">();</span>    <span class="c1">// 向当前进程发送SIGABRT信号，使其异常终止（默认）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/304f3a60d50a9d216143715f9035b610.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/304f3a60d50a9d216143715f9035b610.png, https://img-blog.csdnimg.cn/img_convert/304f3a60d50a9d216143715f9035b610.png 1.5x, https://img-blog.csdnimg.cn/img_convert/304f3a60d50a9d216143715f9035b610.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/304f3a60d50a9d216143715f9035b610.png"
+        title="img" />
+如上图，对6号SIGABRT信号明明捕捉了但是还是中止了。 这是一个很奇怪的现象，查了stack overflow：However, I cannot find any corroborating evidence of that behavior in the signal man page, which clearly states that The signals SIGKILL and SIGSTOP cannot be caught, blocked, or ignored but makes no similar mention for SIGABRT. 也就是信号手册种明确说了9和19号信号不能被捕捉，阻塞，或者忽略，但是没有说SIGABRT信号不能被捕捉。其实这个是因为调用了abort，abort不仅发送了SIGABRT信号，还做了其他事情。所以如果把abort();换成kill(getpid(), SIGABRT); 就会捕捉SIGABRT且进程不会退出。</p>
+</blockquote>
+<p>如何理解通过调用系统接口产生信号：其实很简单，系统调用接口通过提取参数，获取进程pid，信号编号，然后OS向进程PCB内写信号，也就是修改对应进程的pending位图的特定位，后续进程处理该信号。</p>
+<h3 id="3由软件条件产生信号">3.由软件条件产生信号：</h3>
+<h4 id="例一进程间通过管道通信时因软件条件而产生sigpipe信号">例一：进程间通过管道通信时，因软件条件而产生SIGPIPE信号。</h4>
+<p>进程间通过管道通信时，不管是命名管道还是匿名管道，都会提供访问控制。也就是管道读写的四种情况。情况之一是：当管道的读端关闭，写端继续写，则OS会向写端进程发送SIGPIPE信号从而终止写端进程。（SIGPIPE信号的默认处理方式就是terminate process，终止进程。产生条件：Broken pipe：write to pipe with no readers）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 通过软件条件发送信号，比如管道读端关闭，写端继续写，OS会终止写端进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">pipefd</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pipe</span><span class="p">(</span><span class="n">pipefd</span><span class="p">);</span>  <span class="c1">// 创建匿名管道
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="n">pid_t</span> <span class="n">id</span> <span class="o">=</span> <span class="n">fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 子进程，读端，关闭写端
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">close</span><span class="p">(</span><span class="n">pipefd</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">close</span><span class="p">(</span><span class="n">pipefd</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="c1">// 三秒后关闭读端
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="c1">// 父进程写端
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">signal</span><span class="p">(</span><span class="n">SIGPIPE</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">close</span><span class="p">(</span><span class="n">pipefd</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="c1">// 关闭读端
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">message</span> <span class="o">=</span> <span class="s">&#34;haha&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">write</span><span class="p">(</span><span class="n">pipefd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">message</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">message</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// 每隔一秒写一次
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如上，对SIGPIPE信号进行捕捉，当OS发送SIGPIPE信号时，会执行handler方法。下方打印1s进行一次。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/59963910f7bba9d63c67027439153d24.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/59963910f7bba9d63c67027439153d24.png, https://img-blog.csdnimg.cn/img_convert/59963910f7bba9d63c67027439153d24.png 1.5x, https://img-blog.csdnimg.cn/img_convert/59963910f7bba9d63c67027439153d24.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/59963910f7bba9d63c67027439153d24.png"
+        title="img" /></p>
+<p><strong>SIGPIPE是一种由软件条件产生的信号</strong></p>
+<h4 id="例二alarm函数因软件条件产生sigalrm信号">例二：alarm函数，因软件条件产生SIGALRM信号。</h4>
+<blockquote>
+<p>#include &lt;unistd.h&gt;
+unsigned int alarm(unsigned int seconds);
+调用alarm函数可以设定一个闹钟,也就是告诉内核在seconds秒之后给当前进程发SIGALRM信号, 该信号的默认处理动作是终止当前进程。
+这个函数的返回值是0或者是以前设定的闹钟时间还余下的秒数。（也就是一个进程在同一时刻只会有一个闹钟）</p>
+</blockquote>
+<p>下方是一个基于alarm和SIGALRM信号的简单定时执行某任务的程序。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 因软件条件产生信号：alarm函数，SIGALRM信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">func</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">func</span><span class="o">&gt;</span> <span class="n">callbacks</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">uint64_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">showCount</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;current count is : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">count</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">showLog</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;Log...&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">logUser</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">fork</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">execl</span><span class="p">(</span><span class="s">&#34;/usr/bin/who&#34;</span><span class="p">,</span> <span class="s">&#34;who&#34;</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 父进程等待回收一下
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">wait</span><span class="p">(</span><span class="k">nullptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">catchSIGALRM</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了SIGALRM信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 对于SIGALRM的自定义捕捉
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="nl">func</span> <span class="p">:</span> <span class="n">callbacks</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">func</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">alarm</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>   <span class="c1">// 再定一个定时器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">callbacks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="p">(</span><span class="n">showCount</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">callbacks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="p">(</span><span class="n">showLog</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="n">callbacks</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;</span><span class="p">(</span><span class="n">logUser</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="n">catchSIGALRM</span><span class="p">);</span>  <span class="c1">// 捕捉SIGALRM信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">alarm</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// 定一个1s的定时器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="o">++</span><span class="n">count</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>之前的SIGPIPE可以理解为是在管道IPC中，软件条件不满足从而OS发了信号。这里的SIGALRM可以理解为是闹钟软件条件满足从而发了信号。</p>
+<p>这里的定时器闹钟，一定是OS管理的，因为整个程序只有一个执行流。OS中有很多进程，每个进程都有可能通过alarm设定定时器，所以，OS对于这些闹钟，一定是要管理的。所以需要先描述，再组织。就像struct file，task_struct一样。OS定期检查操作系统内所有的闹钟哪个到时间了，就向指定进程发送SIGALRM信号。</p>
+<h3 id="4因硬件异常产生信号">4.因硬件异常产生信号：</h3>
+<h4 id="例一除零操作触发硬件异常os发送8号sigfpe信号">例一：除零操作，触发硬件异常，OS发送8号SIGFPE信号</h4>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/17a6c959868db2bde9df069b04cb7455.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/17a6c959868db2bde9df069b04cb7455.png, https://img-blog.csdnimg.cn/img_convert/17a6c959868db2bde9df069b04cb7455.png 1.5x, https://img-blog.csdnimg.cn/img_convert/17a6c959868db2bde9df069b04cb7455.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/17a6c959868db2bde9df069b04cb7455.png"
+        title="img" /></p>
+<p>OS发送SIGFPE信号是当进程犯了一个floating point exception（浮点异常），本质上是由于硬件异常引起的，这种异常通常发生在进程进行浮点运算时出现了无效操作，如除以零。</p>
+<blockquote>
+<p>具体来说，CPU内是由浮点单元(FPU，Floating Point Unit)来执行浮点运算指令的，浮点单元主要由两部分组成：算术逻辑单元(ALU)和浮点寄存器。算术逻辑单元负责实现浮点运算指令，而浮点寄存器则用于保存运算中间结果和最终结果。当CPU内的浮点单元（FPU）发生除零操作时，会将这种情况标记在状态寄存器中。具体来说，这个状态寄存器通常被称为浮点单元状态寄存器（FPU status register）或者协处理器状态寄存器（Co-processor status register）。这个寄存器用于存储浮点单元的状态和结果状态，包括运算的结果状态（如是否为非数字（NaN）、无穷大）、被除数状态、除数状态、精度状态等。（注：ChatGPT真他妈好用）</p>
+</blockquote>
+<blockquote>
+<p>其实就是，当发生除零操作时，CPU内的状态寄存器的状态标记位会标记这次除零操作（如将比特位置为1），OS会自动进行计算完毕之后的检测，若OS识别到某标记位异常，就会向当前执行的进程发送对应的信号，除零操作对应的就是SIGFPE信号。（为什么是当前进程呢？因为此时的状态标记位一定标记的是当前进程的某指令的运算结果）</p>
+</blockquote>
+<blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"> <span class="n">signal</span><span class="p">(</span><span class="n">SIGFPE</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">0</span><span class="p">;</span>   <span class="c1">// 除零
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>上方实验现象是：handler方法无限调用，不是只调用一次的原因是：这里的硬件异常并没有解决，比如状态寄存器中的某状态标记位一直为1，异常一直存在，OS就会一直检测到硬件异常，并发送对应信号。</p>
+</blockquote>
+<h4 id="例二进程访问非法内存地址触发mmu硬件异常os发送11号sigsegv信号">例二：进程访问非法内存地址，触发MMU硬件异常，OS发送11号SIGSEGV信号</h4>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/21efdbc5b4afe2078d379fd08803cc3a.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/21efdbc5b4afe2078d379fd08803cc3a.png, https://img-blog.csdnimg.cn/img_convert/21efdbc5b4afe2078d379fd08803cc3a.png 1.5x, https://img-blog.csdnimg.cn/img_convert/21efdbc5b4afe2078d379fd08803cc3a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/21efdbc5b4afe2078d379fd08803cc3a.png"
+        title="img" /></p>
+<blockquote>
+<p>又涉及到进程地址空间了&hellip;我们所写程序中的地址都是虚拟地址，是要通过页表转换为对应的物理地址的。野指针，数组的越界访问，总之就是进程试图访问不属于它的内存空间，或者试图读取或写入受保护的内存时，这时的虚拟地址一定是非法的，这个虚拟地址无效，内存管理单元(MMU)（硬件！）发出页面错误中断，操作系统会察觉到这个硬件异常，并发生SIGSEGV信号给对应进程。</p>
+<p>（之前一直说通过页表进行虚拟地址到物理地址的转换，实际上，页表是软件，而这种地址转换发生的频率非常高，故即使是哈希这种O(1)的结构，也太慢了，所以，实际上进行地址转换是通过页表+MMU进行的，MMU是硬件，这里非法地址访问就是MMU硬件异常所引发OS发送SIGSEGV信号）</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="n">SIGFPE</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="n">SIGSEGV</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// int i = 1/0;   // 除零
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>同上方除零异常一样，这里也是无限调用handler方法，原因就是这种硬件异常没有解决，一直存在。</p>
+<h3 id="信号产生总结">信号产生总结</h3>
+<p>上方所说多种产生信号的方式，不管方式是什么，最终一定是由OS向进程发送信号，而发送信号的本质为OS向进程PCB中的pending位图的对应比特位由0置1。最终都是由OS来执行，因为OS是进程的管理者！</p>
+<h2 id="核心转储-core-dump">核心转储-Core Dump</h2>
+<img src="https://img-blog.csdnimg.cn/img_convert/a40d9fbe71e3bd96f32183172d59f389.png" alt="img" style="zoom:80%;" />
+<img src="https://img-blog.csdnimg.cn/img_convert/2e989de2dc93a885668108ba672a79ce.png" alt="img" style="zoom: 80%;" />
+<h3 id="核心转储概念">核心转储概念</h3>
+<p><strong>如上，Term表示这个信号的默认动作是终止这个进程，Core表示这个信号的默认动作是终止这个进程并核心转储（Core Dump）。它们的区别就是是否进行核心转储。</strong></p>
+<p><strong>当一个进程要异常终止时,可以选择把进程的用户空间内存数据全部 保存到磁 盘上,文件名通常是core,这叫做Core Dump。</strong></p>
+<h3 id="核心转储作用">核心转储作用</h3>
+<p>进程异常终止通常是因为有Bug,比如非法内存访问导致段错误, 事后可以用调试器检查core文件以查清错误原因,这叫做Post-mortem Debug（事后调试）。核心转储的作用就是为了方便调试。</p>
+<p>注意</p>
+<p>通常在云服务器这样的生产环境中核心转储功能是关闭的，也就是默认不允许产生core文件，因为core文件中可能包含用户密码等敏感信息,不安全。其次，core文件体积较大，每次进程因Core信号而异常终止时如果都会进行核心转储生成core文件，时间长了是很耗费磁盘空间的。</p>
+<p>可以通过ulimit -c 10240命令开启core dump功能。<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/2aaa38ed39b7ef869ae6433533714b60.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/2aaa38ed39b7ef869ae6433533714b60.png, https://img-blog.csdnimg.cn/img_convert/2aaa38ed39b7ef869ae6433533714b60.png 1.5x, https://img-blog.csdnimg.cn/img_convert/2aaa38ed39b7ef869ae6433533714b60.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/2aaa38ed39b7ef869ae6433533714b60.png"
+        title="img" /></p>
+<p>使用core.pid文件：gdp调试-&gt;core-file core.pid即可。（配合gdb）</p>
+<h3 id="进程等待waitwaitpid的core-dump标记位">进程等待wait/waitpid的core dump标记位</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/b96cb9f4cbeb4e4ba969c5b08e53286f.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/b96cb9f4cbeb4e4ba969c5b08e53286f.png, https://img-blog.csdnimg.cn/img_convert/b96cb9f4cbeb4e4ba969c5b08e53286f.png 1.5x, https://img-blog.csdnimg.cn/img_convert/b96cb9f4cbeb4e4ba969c5b08e53286f.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/b96cb9f4cbeb4e4ba969c5b08e53286f.png"
+        title="img" /></p>
+<p>之前在进程控制中的进程等待那里，可以传一个int* status的输出型参数获取子进程退出信息，当子进程被信号所杀时，status的第8个比特位就是core dump标记位（前7个比特位为终止信号的编号），若真的生成了core文件，则该标记位为1，否则为0。
+注意：若被Action为Core的信号所杀，但是环境不允许生成core文件，则该标记位为0。也就是它标记的是当进程出现某种异常的时候，是否由OS将当前进程在内存中的相关核心数据，转存（dump）到磁盘中。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">fork</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// SIGSEGV默认处理动作为Core 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">waitpid</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">status</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">// 阻塞式等待
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;signal num : &#34;</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">status</span> <span class="o">&amp;</span> <span class="mh">0x7f</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;core dump flag : &#34;</span> <span class="o">&lt;&lt;</span> <span class="p">((</span><span class="n">status</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="信号保存进程如何保存收到的信号">信号保存：进程如何保存收到的信号</h2>
+<h3 id="为什么要进行信号保存">为什么要进行信号保存</h3>
+<p>在OS因某种原因给某进程发送了某信号之后，进程必须处理该信号，时机：进程是在合适的时候处理该信号的（由内核态转为用户态时，详见信号处理），所以，<strong>进程处理信号可能不是立即的，故进程需要将收到的信号保存起来。</strong></p>
+<h3 id="信号相关概念">信号相关概念</h3>
+<ul>
+<li>
+<p>实际执行信号的处理动作称为<strong>信号递达(Delivery)</strong> （默认，忽略，自定义捕捉）</p>
+</li>
+<li>
+<p>信号从产生到递达之间的状态,称为<strong>信号未决(Pending)</strong></p>
+</li>
+<li>
+<p>进程可以选择**阻塞（block）**某个信号。</p>
+</li>
+<li>
+<p>被阻塞的信号产生时将保持在未决状态,直到进程解除对此信号的阻塞,才执行递达的动作。</p>
+</li>
+<li>
+<p>注意,阻塞和忽略是不同的,只要信号被阻塞就不会递达,而忽略是信号递达的一种具体方式。</p>
+</li>
+</ul>
+<h3 id="进程保存信号的方式内核中的表示">进程保存信号的方式（内核中的表示）</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/916c590d79079309b3fc3020ad50d1c2.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/916c590d79079309b3fc3020ad50d1c2.png, https://img-blog.csdnimg.cn/img_convert/916c590d79079309b3fc3020ad50d1c2.png 1.5x, https://img-blog.csdnimg.cn/img_convert/916c590d79079309b3fc3020ad50d1c2.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/916c590d79079309b3fc3020ad50d1c2.png"
+        title="img" /></p>
+<ul>
+<li>
+<p>block信号集（阻塞信号集，信号屏蔽字）：在进程PCB中本质是一个位图结构（sigset_t)。
+每一个bit位用于表示对应信号是否被阻塞（屏蔽）</p>
+</li>
+<li>
+<p>pending信号集（未决信号集）：在进程PCB中本质是一个位图结构（sigset_t）
+每一个bit位用于表示对应信号是否处于未决状态（简单理解就是进程是否收到了这个信号，等处理状态，具体处理不处理还要看是否被block）</p>
+</li>
+<li>
+<p>handler方法处理表：一个函数指针数组。<code>void (* handlerArray[32]) (int);</code>
+信号处理三种方式：默认，忽略，自定义捕捉。这里存储的就是对应信号的具体处理方法，若存储的是SIG_DFL（本质是一个宏定义），就是该信号要执行默认处理逻辑，若SIG_IGN，就是忽略该信号，若自定义捕捉，则这里存的就是自定义捕捉方法的函数地址。（signal函数修改的就是handler方法处理表）</p>
+</li>
+</ul>
+<blockquote>
+<p>综上，也就是，进程收到信号之后，不一定会递达该信号，还要看该信号是否被该进程屏蔽（block）了。具体为什么要增加block信号这个功能呢？肯定是因为需要这个功能啊，有需求和使用场景&hellip;</p>
+<p>block信号集和pending信号集的结构完全一样，就是一个位图结构。只是具体比特位的意义不同，分别表示对应信号是否被阻塞和是否处于未决状态。故每个信号都有两个标志位分别表示阻塞(block)和未决(pending)</p>
+<p>pending信号集只能存储对应信号处于或不处于未决状态，因此若一个进程block某个信号，然后接收到了多次这个信号，实际上只会存储一次。解除block之后也只会递达一次。普通信号是这样的。而实时信号产生多次会以此放进一个队列中&hellip;不讨论</p>
+</blockquote>
+<h3 id="sigset_t">sigset_t</h3>
+<p>由上，我们已知pending信号集和block信号集本质就是一个位图结构，它们的类型其实就是sigset_t类型，sigset_t就是一个位图结构。</p>
+<p>sigset_t是操作系统提供的自定义类型（语言会提供.h，.hpp以及语言的自定义类型，如int，double，OS也会提供.h和自定义类型，比如pid_t，sigset_t）</p>
+<p>sigset_t类型对于每种信号会用一个bit表示“有效”或“无效”状态。具体这个有效和无效在阻塞信号集和pending信号集中含义不同，阻塞信号集中有效和无效指的是该信号是否被阻塞，在未决信号集中指的是该信号是否处于未决状态&hellip;</p>
+<p>OS给我们提供了操作sigset_t（位图）的方法。也就是这个位图结构不建议我们去直接操作和修改，建议使用操作系统提供的接口。（因为linux内核是C语言写的，所以其实这个sigset_t位图就是一个struct，我们是可以获取到它的成员的）</p>
+<h4 id="位图信号集sigset_t操作函数">位图信号集sigset_t操作函数</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">sigemptyset</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">);</span>      <span class="c1">// 初始化信号集，所有信号对应bit清零
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sigfillset</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">);</span>       <span class="c1">// 初始化信号集，所有信号对应bit置位
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sigaddset</span> <span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signo</span><span class="p">);</span> <span class="c1">// 添加某种信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sigdelset</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signo</span><span class="p">);</span>  <span class="c1">// 删除某种信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">sigismember</span><span class="err">（</span><span class="k">const</span> <span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signo</span><span class="p">);</span>  <span class="c1">// 判断某信号在信号集中是否有效
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="pending信号集block信号集handler方法处理表相关的函数接口">pending信号集，block信号集，handler方法处理表相关的函数接口</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// 0. 读取或更改进程的信号屏蔽字
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sigprocmask</span><span class="p">(</span><span class="kt">int</span> <span class="n">how</span><span class="p">,</span> <span class="k">const</span> <span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">,</span> <span class="n">sigset_t</span> <span class="o">*</span><span class="n">oset</span><span class="p">);</span> <span class="c1">// oset为输出型参数，用于获取旧的信号屏蔽字
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 有关sigprocmask的how参数：传入下方宏定义
+</span></span></span><span class="line"><span class="cl"><span class="c1">// SIG_BLOCK ：set包含了我们希望添加到当前信号屏蔽字的信号，相当于mask = mask | set
+</span></span></span><span class="line"><span class="cl"><span class="c1">// SIG_UNBLOCK : set包含了我们希望解除阻塞的信号，相当于 mask = mask &amp; ~set
+</span></span></span><span class="line"><span class="cl"><span class="c1">// SIG_SETMASK : 设置当前信号屏蔽字为set所指向的sigset_t，相当于mask = set
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 1. 读取当前调用进程的pending信号集（未决信号集）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">sigpending</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span><span class="n">set</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1">// 2. 自定义信号捕捉方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">sighandler_t</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">sighandler_t</span> <span class="nf">signal</span><span class="p">(</span><span class="kt">int</span> <span class="n">signum</span><span class="p">,</span> <span class="n">sighandler_t</span> <span class="n">handler</span><span class="p">);</span>  <span class="c1">// handler是回调函数，通过回调的方式，修改对应的信号捕捉方法。
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>signal系统调用：本质就是OS将调用进程的PCB中的handler方法表中signum对应函数指针修改为handler，即完成了signum信号的自定义捕捉，之后该进程进行signum信号递达时，就会调用handler方法（注意该方法在用户空间中，详见信号处理）</p>
+<p>有block信号集的读写接口，有pending信号集的读接口，但是没有pending信号集的写接口。实际上，信号产生的方式就是写pending信号集的方式。kill -x pid</p>
+<h3 id="编码验证">编码验证</h3>
+<ol>
+<li>若进程将所有信号都捕捉，则进程无敌？</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">sig</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">getpid</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">sig</span> <span class="o">&lt;=</span> <span class="mi">31</span><span class="p">;</span> <span class="o">++</span><span class="n">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">signal</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>然后给进程发送1~31号信号，结果：9和19号信号无法被捕捉，且19号SIGSTOP暂停进程之后，发送18号SIGCONT信号，18号信号被捕捉了，会调用18号信号的捕捉方法，同时也会continue process，也就是生效了&hellip;这些其实不是很重要，大概率是一些特殊设计。只需要注意并非所有的普通信号都可以被捕捉。</p>
+</blockquote>
+<ol start="2">
+<li>验证将某信号block之后，向进程发送该信号，是否pending信号集中会有对应的1标记位出现.</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">showSigset</span><span class="p">(</span><span class="n">sigset_t</span><span class="o">*</span> <span class="n">sigset</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 此处信号集可能为pending信号集可能是block信号集。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">sig</span> <span class="o">&lt;=</span> <span class="mi">31</span><span class="p">;</span> <span class="o">++</span><span class="n">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">sigismember</span><span class="p">(</span><span class="n">sigset</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>   <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;1&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;0&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">sig</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">sig</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">sig</span> <span class="o">&lt;=</span> <span class="mi">31</span><span class="p">;</span> <span class="o">++</span><span class="n">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">signal</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigset_t</span> <span class="n">sigset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span> <span class="c1">// 获取进程初始时的block信号集
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;初始时，进程的block信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigpending</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;初始时，进程的pending信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">sigfillset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">);</span> <span class="c1">// 试图将全部信号进行block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span> <span class="c1">// 获取新的block信号集
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;试图将全部信号进行block之后，block信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 每秒打印一次pending信号集
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">sigpending</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;此时，pending信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">        <span class="c1">// if(count == 10)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// {
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//     // 将全部信号解除block，看是否会递达
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//     sigemptyset(&amp;sigset);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//     sigprocmask(SIG_SETMASK, &amp;sigset, nullptr); // 解除全部信号block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// }
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="https://img-blog.csdnimg.cn/img_convert/c2ad9e9075069e838f273b8ee975455a.png" alt="img" style="zoom:67%;" />
+<p>上方，试图将1~31号信号都block，然后查看进程的信号屏蔽字，发现9号SIGKILL和19号SIGSTOP信号无法被阻塞，然后按编号顺序向进程每隔1s发送一个信号，不发9和19，结果如图，确实pending信号集中会存储因为被block而处于未决态的信号。</p>
+<p>唯一超出预期的是18号信号，18号信号确实被block了，直接向进程发送18号信号，18号的pending信号集的比特位确实会变为1，但是当向进程发送19，20，21，22号时（这些信号的默认动作都是STOP），18号信号的比特位会变为0，也就是进行了信号递达&hellip;其实在上一个示例中就说过了SIGCONT的特殊，应该是特殊处理了，大致了解即可。</p>
+<p>故，9号SIGKILL和19号SIGSTOP信号无法被block，无法被捕捉，无法被忽略。这也是为了防止，若恶意进程将所有信号block，则user和OS将无法杀死进程。</p>
+<h2 id="信号处理进程处理信号的时机和流程">信号处理：进程处理信号的时机和流程</h2>
+<h3 id="进程什么时候处理信号">进程什么时候处理信号</h3>
+<p>OS向进程发送信号之后（pending信号集中某信号处于未决状态），那么，进程不是立即处理该信号的，而是在合适的时候（这也是为什么要把信号保存起来）。那么这个合适的时候是什么时候呢？</p>
+<ul>
+<li>注意，有关信号的内核数据结构，如pending信号集，block信号集和handler方法处理表都在PCB中，这是内核数据，属于内核范畴。故，想要处理信号，就必须访问这些内核数据，则此时CPU的状态必须处于内核态（因为只有内核态才有权访问内核数据）。相对的，CPU运行用户程序，执行用户代码时，就处于用户态。</li>
+</ul>
+<blockquote>
+<p>用户态和内核态的概念：内核态和用户态是操作系统内核与用户进程之间的两种不同状态。在这两种状态中，操作系统内核和用户进程对于系统资源和硬件设备的访问权限是不同的。 **内核态是 CPU 执行操作系统内核代码的状态。**在内核态中， CPU 拥有所有特权，可以执行所有底层操作，并具有访问所有内存地址和设备的权限。这种状态下，内核能够执行所有系统调用和硬件中断处理。<strong>所有关于操作系统内核的操作都需要在内核态下执行。</strong> **用户态是 CPU 执行用户进程代码的状态。**在用户态中，进程只能访问被分配给它的内存，并且不能直接访问硬件和其他进程的内存。**当一个进程需要进行一些特殊操作，如请求系统调用、执行系统调用，则需要从用户态切换到内核态。**因此用户态下的进程不能进行一些底层的操作，对系统资源和硬件设备的访问也有限制，这些操作需要通过系统调用来完成。这种方式可以保证系统安全。</p>
+<p><strong>划分内核态和用户态的主要目的是为了保护操作系统和其他进程免受用户进程的损害。</strong> 在内核态下，操作系统内核拥有所有特权，可以执行所有底层操作和访问所有内存地址和设备，因此可以保证系统的稳定性和安全性。而在用户态下，用户进程只能访问被分配给它的内存，并且不能直接访问硬件和其他进程的内存，这样可以防止用户进程对其他进程和操作系统产生影响。 通过这种方式，可以将操作系统的核心代码和用户进程的代码分离开来，保护操作系统免受用户进程的损害。当然这样也带来了一些性能的损失，因为要在两种状态间不断地切换, 但相对于安全性来说是值得的</p>
+<p>结合进程地址空间</p>
+ <img src="https://img-blog.csdnimg.cn/img_convert/9b024533296be296ce636b68fb849b9b.png" alt="img"  />
+<p>进程地址空间分为0~3G用户地址空间和3~4G内核地址空间（32位），用户空间通过用户级页表映射到物理内存中的用户数据和用户代码。内核空间通过内核级页表映射到物理内存中的内核数据和内核代码。</p>
+<p>通常，用户级页表每个进程都有一个，因为它们映射的物理内存不同，实现了进程独立性。而操作系统在物理内存中只有一个，内核级页表也只需要一个即可，内核级页表映射到物理内存中的内核数据和内核代码，这个内核级页表是所有进程共享的。</p>
+<p>结合，内核态就是CPU执行内核代码的状态，用户态就是CPU执行用户代码的状态。比如用户代码中调用了系统调用接口，就会从从用户态转为内核态（接口中有转换的指令），否则用户态无法执行内核代码。其实这个和调用动态库内的函数接口没什么本质区别，只是动态库代码在共享区，而系统接口代码在内核空间中。都是在进程地址空间内不断跳转完成的。用户代码可以直接跳转执行动态库中的代码，因为都属于用户空间的代码。</p>
+<p><strong>哪些情况下会从用户态转为内核态？</strong></p>
+<p>最典型的：用户代码调用系统接口，这个系统调用接口就属于内核代码，执行内核代码必须处于内核态，而系统调用接口编译之后形成的汇编指令中就有从用户态向内核态转变的指令，比如int 80（这里的int并非C语言的基本类型，而是一种汇编指令，意为interrupt）。这也就说明了，OS可以访问并管理硬件，而进程若想访问硬件，则必须调用系统调用接口通过OS访问，因为只有合法的系统调用接口里面才有向内核态的转换，否则用户态是无法直接执行内核代码或访问内核数据的，因为没有权限。这也是OS对硬件保护的体现。</p>
+<p>其次：若某进程的调度时间到了，OS需要进行进程切换，此时执行的一定是内核代码
+故并非一个进程一直执行用户代码就不会进入内核态，像这种进程调度切换是无法避免的。</p>
+<p>还有：缺陷，中断，异常等的发生也会使CPU进入内核态执行OS内核代码。</p>
+</blockquote>
+<blockquote>
+<p>关于内核态和用户态我的理解&hellip;</p>
+<p>内存中有很多代码，都是二进制序列，CPU会不断地执行代码，代码分为用户代码和内核代码。CPU在执行代码时会记录此时执行的代码是用户的代码还是内核的代码，对应的就是用户态和内核态，<strong>做此区分的主要目的就是为了限制用户态的权限</strong>，也就是如果此时是用户的代码，则此代码不能访问那些用户没有权限访问的数据和代码（其实代码也属于数据的一种），比如内核数据，其他进程的数据。这其实就是为了保护OS，保护硬件，保护其他进程，提高稳定性。</p>
+<p>而用户的代码若想完成某些功能，访问某些硬件或数据，则必须通过系统调用，系统调用属于内核代码，且其中就有用户态向内核态的转换指令</p>
+</blockquote>
+<p>综上，了解了用户态和内核态概念，区别，划分目的，结合进程地址空间，以及转换场景。</p>
+<p><strong>进程进行信号处理的时间为：从内核态转回用户态时，进行信号检测和处理。</strong>
+也就是因某种原因进入了内核态，执行完内核代码之后，需要返回到用户代码中继续执行之前，进行信号检测和处理。</p>
+<h3 id="进程处理信号的流程">进程处理信号的流程</h3>
+<p>OS给进程发送信号之后（修改pending信号集）-&gt;进程因某原因陷入内核，进入内核态-&gt;返回用户态之前进行信号检测和处理-&gt;大致处理流程：检测pending信号集是否有信号处于未决状态-&gt;若有，看对应信号是否被阻塞-&gt;若阻塞，则信号处理完成（因为此时不可进行信号递达），返回用户态继续执行主控制流程的用户代码-&gt;若不阻塞，则看对应信号的handler方法处理表中函数指针</p>
+<p>若信号处理方法为忽略（1强转为函数指针类型），则将pending信号集的对应比特位由1置0即可（忽略也是信号递达的一种方式）。信号处理结束，返回用户模式，从主控制流程中上次被中断的地方继续向下执行。</p>
+<p>若信号处理方法为默认（0强转为函数指针类型），则执行信号的默认处理方法，如终止，暂停，继续，忽略（这里的忽略为默认处理方法）。这里因为具体处理行为不定，故要不要再返回用户态是不确定的，因为进程可能直接终止。但是，此时是处于内核态的，故，执行很多OS方法都有权限，可以直接执行。</p>
+<p>若信号处理方法为用户自定义的捕捉方法，则此时的流程与默认，忽略不尽相同。</p>
+<h3 id="捕捉信号的流程">捕捉信号的流程</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/601590a028d8dd46f47f8c90cec1795c.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/601590a028d8dd46f47f8c90cec1795c.png, https://img-blog.csdnimg.cn/img_convert/601590a028d8dd46f47f8c90cec1795c.png 1.5x, https://img-blog.csdnimg.cn/img_convert/601590a028d8dd46f47f8c90cec1795c.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/601590a028d8dd46f47f8c90cec1795c.png"
+        title="img" /></p>
+<p>因某原因进入内核，未决，未阻塞&hellip;与默认和忽略的信号处理流程的不同之处在于</p>
+<p>若信号的handler处理方法表中存储的是用户空间中自定义捕捉方法的函数地址，则此时需转为用户态去执行捕捉函数（上图的sighandler），注意，内核态是有权执行用户代码的，但这是不安全的，因为用户代码是否有非法操作是不确定的，故需要先转为用户态，再执行捕捉方法。执行完之后，通过系统调用sigreturn再次进入内核，做一些信号处理的收尾工作，如将pending信号集的对应信号比特位由1置0（可能这个操作并非此时进行），检测是否有新的信号产生&hellip;至此，信号捕捉完成，返回用户模式，从主控制流程中上次被中断的地方继续向下执行。（此处要恢复main函数的上下文）</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/3f69e019cdae16aa1f4ee12b0485bd5c.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/3f69e019cdae16aa1f4ee12b0485bd5c.png, https://img-blog.csdnimg.cn/img_convert/3f69e019cdae16aa1f4ee12b0485bd5c.png 1.5x, https://img-blog.csdnimg.cn/img_convert/3f69e019cdae16aa1f4ee12b0485bd5c.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/3f69e019cdae16aa1f4ee12b0485bd5c.png"
+        title="img" /></p>
+<p>如上图为记忆捕捉信号流程的示意图，一共进行了四次用户态和内核态之间的转变（蓝色标记），进行信号检测的时机是从内核态转回用户态之前（红色标记），上图仅适用于handler方法表中为自定义捕捉函数时。</p>
+<h3 id="信号捕捉方法20sigaction">信号捕捉方法2.0：sigaction</h3>
+<p>前面说了signal函数用于捕捉信号，设定信号的自定义捕捉方法。此处的sigaction也是这个功能，并有一些拓展功能。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="kt">int</span> <span class="nf">sigaction</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="nc">sigaction</span> <span class="o">*</span><span class="n">act</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">sigaction</span> <span class="o">*</span><span class="n">oact</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1">// 系统提供的同名结构体类型sigaction
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="nc">sigaction</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span>     <span class="p">(</span><span class="o">*</span><span class="n">sa_handler</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>    <span class="c1">// signo的自定义捕捉方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">void</span>     <span class="p">(</span><span class="o">*</span><span class="n">sa_sigaction</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="n">siginfo_t</span> <span class="o">*</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="p">);</span>  <span class="c1">// 有关实时信号，不关心
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">sigset_t</span>   <span class="n">sa_mask</span><span class="p">;</span>    <span class="c1">// 拓展功能，设定执行信号的处理函数时，block信号集的内容。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span>        <span class="n">sa_flags</span><span class="p">;</span>   <span class="c1">// 不关心，设为0即可
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">void</span>     <span class="p">(</span><span class="o">*</span><span class="n">sa_restorer</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>  <span class="c1">// 不关心
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>当某个信号的处理函数被调用时,内核自动将当前信号加入进程的信号屏蔽字,当信号处理函数返回时自动恢复原来 的信号屏蔽字,这样就保证了在处理某个信号时,如果这种信号再次产生,那么它会被阻塞到当前处理结束为止。处理结束后，会再次递达此信号。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 验证：当信号捕捉函数处理时，OS是否会自动阻塞该信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">showSigset</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">31</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">sigismember</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;1&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;0&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler2</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigset_t</span> <span class="n">sigset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;信号捕捉方法执行时，block信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;2号信号捕捉方法执行结束&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler3</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;执行3号信号捕捉方法&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigset_t</span> <span class="n">sigset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;初始时，block信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">handler2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">handler3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/9107f80db195cafe07299df7f16f0586.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/9107f80db195cafe07299df7f16f0586.png, https://img-blog.csdnimg.cn/img_convert/9107f80db195cafe07299df7f16f0586.png 1.5x, https://img-blog.csdnimg.cn/img_convert/9107f80db195cafe07299df7f16f0586.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/9107f80db195cafe07299df7f16f0586.png"
+        title="img" /></p>
+<p>如图，确实在信号捕捉方法执行时，会阻塞当前处理信号。但是其他信号不会被block，处理2号时，3号信号产生，会直接去处理三号。</p>
+<p>如果在调用信号处理函数时,除了当前信号被自动屏蔽之外,还希望自动屏蔽另外一些信号,则用sigaction的sa_mask字段说明这些需要额外屏蔽的信号,当信号处理函数返回时自动恢复原来的信号屏蔽字。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">showSigset</span><span class="p">(</span><span class="n">sigset_t</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">31</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">sigismember</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;1&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;0&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler2</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;进程收到了一个&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigset_t</span> <span class="n">sigset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigprocmask</span><span class="p">(</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;信号捕捉方法执行时，block信号集为 : &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">showSigset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sigset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;2号信号捕捉方法执行结束&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler3</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;执行3号信号捕捉方法&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="c1">// 验证sigaction
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">handler3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="nc">sigaction</span> <span class="n">sa</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sa</span><span class="p">.</span><span class="n">sa_flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigemptyset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sigaddset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sa</span><span class="p">.</span><span class="n">sa_mask</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>    <span class="c1">// 2号处理时，将3号也屏蔽
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">sa</span><span class="p">.</span><span class="n">sa_handler</span> <span class="o">=</span> <span class="n">handler2</span><span class="p">;</span>   <span class="c1">// 使用sigaction捕捉2号信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">sigaction</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sa</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">);</span>   <span class="c1">// 使用sigaction捕捉2号信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/9e6fc9d340e24721e9ab6a4404e8eb08.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/9e6fc9d340e24721e9ab6a4404e8eb08.png, https://img-blog.csdnimg.cn/img_convert/9e6fc9d340e24721e9ab6a4404e8eb08.png 1.5x, https://img-blog.csdnimg.cn/img_convert/9e6fc9d340e24721e9ab6a4404e8eb08.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/9e6fc9d340e24721e9ab6a4404e8eb08.png"
+        title="img" /></p>
+<p>如上，在2号信号的捕捉方法执行时，发送3号信号，此时3号被block（sigaction的sa_mask字段），并没有立即递达，而是在2号捕捉方法执行完成后，恢复原来的信号屏蔽字，3号解除阻塞（此时2号也解除），递达3号。</p>
+<p>这里也算是解释了OS设计block这个功能的本质原因（之一），也就是信号处理过程中，又来了同样的信号，怎么办？因为OS会自动阻塞该信号，故不会立即递达。处理完成后会恢复为原来的信号屏蔽字。</p>
+<p>最后一句：信号捕捉并没有创建新的进程或线程&hellip;（突然的一句，和上方无直接关联）
+这肯定是呀~&hellip;..</p>
+<h2 id="可重入函数vs不可重入函数">可重入函数vs不可重入函数</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/89e8425043093d0eaa273904bc2d0c82.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/89e8425043093d0eaa273904bc2d0c82.png, https://img-blog.csdnimg.cn/img_convert/89e8425043093d0eaa273904bc2d0c82.png 1.5x, https://img-blog.csdnimg.cn/img_convert/89e8425043093d0eaa273904bc2d0c82.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/89e8425043093d0eaa273904bc2d0c82.png"
+        title="img" /></p>
+<p>main调用insert向链表head中头插一个结点node1，insert操作分为两步，执行完第一步之后，因硬件中断使进程切换到内核，返回用户态之前进行信号检测和处理，检测到信号之后调用捕捉方法：sighandler（用户空间），sighandler中也调用了insert方法向同一个链表中插入一个node2结点。insert(&amp;node2);和sighandler都执行完之后，返回内核态，再次返回用户态就会从上次被中断的地方继续向下执行，即insert(&amp;node1)的第二步操作。最后执行完insert(&amp;node1)之后，main和sighandler先后向链表中插入两个结点，最后只有一个结点被真正插入链表中了。</p>
+<p><strong>可重入函数(reentrant function)是指在一个函数调用过程中，如果它被其他函数调用，并且在第二次调用结束后能够正常返回到第一次调用，那么这个函数就是可重入函数。</strong></p>
+<p><strong>相反，不可重入函数(non-reentrant function)就是不能在同一时间被多个函数调用的函数。</strong></p>
+<p>重入一个函数就是在这个函数正在运行时再次调用它。如果这个函数是可重入的，那么它会正常处理这个重入请求；否则，可能会发生错误或者不可预料的结果。</p>
+<p>如上，insert函数在同一时间被main和sighandler调用，因为insert访问一个全局链表，可能因为重入而造成错乱。像这样的函数就称为不可重入函数。如果一个函数只访问自己的局部变量和参数，则称为可重入函数。（想想为什么，函数栈帧！）</p>
+<p>当一个函数访问了全局，static变量，则就是不可重入的，包括errno也是全局数据。再比如使用了malloc/free（因为malloc也是使用全局链表来管理堆的），调用了标准库IO函数（标准库IO函数很多都是以不可重入的方式使用全局数据）。则就称为不可重入函数（可重入和不可重入是函数的一种特征）</p>
+<h2 id="volatile">volatile</h2>
+<p>之前在C++的地方就简单学过这个关键字。修改const变量那里？reinterpret_cast</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// volatile
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;num : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">num</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">num</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;-&gt;&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">num</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;while已退出，num != 0 num : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">num</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/79de32c3a17699c94d2bdad9396d74dc.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/79de32c3a17699c94d2bdad9396d74dc.png, https://img-blog.csdnimg.cn/img_convert/79de32c3a17699c94d2bdad9396d74dc.png 1.5x, https://img-blog.csdnimg.cn/img_convert/79de32c3a17699c94d2bdad9396d74dc.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/79de32c3a17699c94d2bdad9396d74dc.png"
+        title="img" /></p>
+<p>1、不加volatile，默认优化程度。2、不加volatile，-O3优化程度。3、加volatile，-O3优化程度。</p>
+<p>第二种-O3优化程度时(更高级别的优化)，编译器检测到main函数中对于这个num全局变量没有修改的语句，就进行优化行为：将num加载到CPU内寄存器中，如edx？之后while语句取num时，不再从内存中取，而是直接取寄存器中的num。这也就导致了handler将num改变之后，while仍旧没有推出。</p>
+<p>当volatile int num = 0;之后，<strong>用volatile声明num表示拒绝优化行为，每次取num都使用move指令去内存中取，保证了内存的可见性。</strong></p>
+<p>注意，编译器的优化行为是在程序编译时进行的，也就是编译器进行的优化行为，而不是程序运行时，程序运行起来之后，程序的行为就已经确定了。</p>
+<h2 id="sigchid">SIGCHID</h2>
+<p>进程等待那里讲过wait和waitpid函数可用于避免僵尸进程和获取子进程退出信息。父进程可以阻塞等待子进程结束,也可以非阻塞地查询是否有子进程结束等待清理(也就是轮询的方式)。采用第一种方式,父进程阻塞了就不能处理自己的工作了;采用第二种方式,父进程在处理自己的工作的同时还要记得时不时地轮询一下,程序实现复杂。</p>
+<p>其实,<strong>子进程在终止时会给父进程发17号SIGCHLD信号，该信号的默认处理动作是忽略</strong>（IGN，这里是默认方式的忽略，并非三种处理方式中的忽略，其实大多情况下没有区别）。</p>
+<p><strong>利用子进程退出时向父进程发送SIGCHID信号，父进程可以捕捉此信号，父进程调用自定义处理函数去回收子进程或获取子进程退出信息。这样父进程就不必关心子进程了（避免阻塞或轮询方式处理子进程）。</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">handler</span><span class="p">(</span><span class="kt">int</span> <span class="n">signo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;父进程收到了由子进程发送的&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">signo</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;号信号&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pid_t</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">((</span><span class="n">id</span> <span class="o">=</span> <span class="n">waitpid</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">status</span><span class="p">,</span> <span class="n">WNOHANG</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 回收到了一个子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="n">WIFEXITED</span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;子进程退出码为 : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">WEXITSTATUS</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span>
+</span></span><span class="line"><span class="cl">            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;子进程退出信号为 : &#34;</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">status</span> <span class="o">&amp;</span> <span class="mh">0x7f</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;if core dump : &#34;</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">status</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;子进程回收成功&#34;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">fork</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>   <span class="c1">// 退出码为1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="n">SIGCHLD</span><span class="p">,</span> <span class="n">handler</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;parent process is working</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如上，可以通过捕捉SIGCHLD信号的方式回收子进程和获取子进程退出信息。</p>
+<p>注意点：若父进程创建多个子进程，则在处理SIGCHLD时，此时具体退出的子进程数量不确定，故不能只调用一次waitpid（WNOHANG），因为SIGCHLD是普通信号，只能记录是否处于未决状态，信号数量不能保存。所以需要采用上方while循环方式不断回收，直到回收完全部的退出子进程。或者也可以把子进程pid放在一个全局vector中，每次都非阻塞式遍历等待子进程。（在只有一个子进程的情况下不需要）</p>
+<p>上方while循环，若10个子进程中6个退出了，则会循环7次。第七次返回负数，条件不满足。</p>
+<p>子进程并非只有终止时发送SIGCHLD给父进程，暂停时也会，故父进程在捕捉SIGCHLD的方法中必须非阻塞式等待，若阻塞式等待子进程可能会影响父进程的执行。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/392e5badc40a3703c9a31885b91211c1.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/392e5badc40a3703c9a31885b91211c1.png, https://img-blog.csdnimg.cn/img_convert/392e5badc40a3703c9a31885b91211c1.png 1.5x, https://img-blog.csdnimg.cn/img_convert/392e5badc40a3703c9a31885b91211c1.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/392e5badc40a3703c9a31885b91211c1.png"
+        title="img" /></p>
+<p>若我们想更方便地回收子进程避免僵尸进程，且不关心子进程退出情况（也就是不想在处理函数中调用wait/waitpid），有什么更便捷的方式吗？</p>
+<p><strong>事实上，由于UNIX 的历史原因，父进程调用signal或sigaction将SIGCHLD的处理方式设为SIG_IGN（忽略），这样，fork出的子进程在终止时会自动清理掉，不会产生僵尸进程。</strong></p>
+<p>注意，系统默认处理方式的忽略和用户用sigaction函数设定的SIG_IGN忽略通常没有区别，但这是一个特例。此方法对于Linux可用,但不保证 在其它UNIX系统上都可用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">fork</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;child process pid : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">getpid</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">signal</span><span class="p">(</span><span class="n">SIGCHLD</span><span class="p">,</span> <span class="n">SIG_IGN</span><span class="p">);</span> <span class="c1">// 忽略SIGCHLD
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/8c08fec503fdc82a3c0ca38993e2cafc.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/8c08fec503fdc82a3c0ca38993e2cafc.png, https://img-blog.csdnimg.cn/img_convert/8c08fec503fdc82a3c0ca38993e2cafc.png 1.5x, https://img-blog.csdnimg.cn/img_convert/8c08fec503fdc82a3c0ca38993e2cafc.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/8c08fec503fdc82a3c0ca38993e2cafc.png"
+        title="img" /></p>
+<p>5s后子进程自动终止且没有生成僵尸进程。</p>
+<p>若不将SIGCHLD的处理方式设为SIG_IGNs</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/fb3fa50bf5e4a886d04dc02c63ce227c.png"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/fb3fa50bf5e4a886d04dc02c63ce227c.png, https://img-blog.csdnimg.cn/img_convert/fb3fa50bf5e4a886d04dc02c63ce227c.png 1.5x, https://img-blog.csdnimg.cn/img_convert/fb3fa50bf5e4a886d04dc02c63ce227c.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/fb3fa50bf5e4a886d04dc02c63ce227c.png"
+        title="img" /></p>
+<p>则子进程会变为僵尸进程defunct</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" data-title="" data-via="xxxx"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" data-title=""><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" data-title=""><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://example.org/linux7_%E8%BF%9B%E7%A8%8B%E4%BF%A1%E5%8F%B7/" data-title=""><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux8.0_linux%E5%A4%9A%E7%BA%BF%E7%A8%8B/" class="prev" rel="prev" title=""><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i></a>
+            <a href="/linux6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.115.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">xxxx</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -1,7 +1,7 @@
 {
 	"version": 3,
 	"file": "style.min.css",
-	"sourceRoot": "D:/blog/DaysOfExperience.github.io/my_website",
+	"sourceRoot": "C:/Users/yangzilong/Desktop/z/github仓库~/DaysOfExperience.github.io/myblog",
 	"sources": [
 		"themes/LoveIt/assets/css/style.scss",
 		"themes/LoveIt/assets/lib/normalize/normalize.css",

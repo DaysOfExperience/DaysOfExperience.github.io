@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - My New Hugo Site</title><meta name="Description" content="This is my cool site"><meta property="og:title" content="" />
+<meta property="og:description" content="预备知识 理解源IP地址和目的IP地址 在IP数据包头部中, 有两个IP地址, 分别叫做源IP地址, 和目的IP地址.
+思考: 我们光有IP地址就可以完成通信了嘛? 想象一下发qq消息的例子, 有了IP地址能够把消息发送到对方的机器上, 但是还需要有一个其他的标识来区分出, 这个数据要给哪个程序（进程）进行解析.
+认识端口号 端口号(port)是传输层协议的内容. 端口号是一个2字节16位的整数; 端口号用来标识一个进程, 告诉操作系统, 当前的这个数据要交给哪一个进程来处理; IP地址 &#43; 端口号能够标识网络上的某一台主机的某一个进程; 同一台主机上，一个端口号只能被一个进程占用. 另外, 一个进程可以绑定多个端口号; 但是一个端口号不能被多个进程绑定; 理解 &ldquo;端口号&rdquo; 和 &ldquo;进程ID&rdquo;：解耦
+理解源端口号和目的端口号：传输层协议(TCP和UDP)的数据段中有两个端口号, 分别叫做源端口号和目的端口号. 就是在描述 &ldquo;数据是哪个进程发的, 要发给哪个进程&rdquo;;
+认识TCP、UDP协议 此处我们先对TCP(Transmission Control Protocol 传输控制协议)有一个直观的认识; 后面我们再详细讨论TCP的一 些细节问题.
+传输层协议 有连接 可靠传输 面向字节流
+此处我们也是对UDP(User Datagram Protocol 用户数据报协议)有一个直观的认识; 后面再详细讨论.
+传输层协议 无连接 不可靠传输 面向数据报
+网络字节序 我们已经知道,内存中的多字节数据相对于内存地址有大端和小端之分, 磁盘文件中的多字节数据相对于文件中的偏移地址也有大端小端之分, 网络数据流同样有大端小端之分. 那么如何定义网络数据流的地址呢?
+发送主机通常将发送缓冲区中的数据按内存地址从低到高的顺序发出; 接收主机把从网络上接到的字节依次保存在接收缓冲区中,也是按内存地址从低到高的顺序保存; 因此,网络数据流的地址应这样规定:先发出的数据是低地址,后发出的数据是高地址. TCP/IP协议规定,网络数据流应采用大端字节序,即低地址高字节. 不管这台主机是大端机还是小端机, 都会按照这个TCP/IP规定的网络字节序来发送/接收数据; 如果当前发送主机是小端, 就需要先将数据转成大端; 否则就忽略, 直接发送即可; 为使网络程序具有可移植性,使同样的C代码在大端和小端计算机上编译后都能正常运行,可以调用以下库函数做网络字节序和主机字节序的转换。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" /><meta property="og:image" content="http://example.org/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://example.org/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="预备知识 理解源IP地址和目的IP地址 在IP数据包头部中, 有两个IP地址, 分别叫做源IP地址, 和目的IP地址.
+思考: 我们光有IP地址就可以完成通信了嘛? 想象一下发qq消息的例子, 有了IP地址能够把消息发送到对方的机器上, 但是还需要有一个其他的标识来区分出, 这个数据要给哪个程序（进程）进行解析.
+认识端口号 端口号(port)是传输层协议的内容. 端口号是一个2字节16位的整数; 端口号用来标识一个进程, 告诉操作系统, 当前的这个数据要交给哪一个进程来处理; IP地址 &#43; 端口号能够标识网络上的某一台主机的某一个进程; 同一台主机上，一个端口号只能被一个进程占用. 另外, 一个进程可以绑定多个端口号; 但是一个端口号不能被多个进程绑定; 理解 &ldquo;端口号&rdquo; 和 &ldquo;进程ID&rdquo;：解耦
+理解源端口号和目的端口号：传输层协议(TCP和UDP)的数据段中有两个端口号, 分别叫做源端口号和目的端口号. 就是在描述 &ldquo;数据是哪个进程发的, 要发给哪个进程&rdquo;;
+认识TCP、UDP协议 此处我们先对TCP(Transmission Control Protocol 传输控制协议)有一个直观的认识; 后面我们再详细讨论TCP的一 些细节问题.
+传输层协议 有连接 可靠传输 面向字节流
+此处我们也是对UDP(User Datagram Protocol 用户数据报协议)有一个直观的认识; 后面再详细讨论.
+传输层协议 无连接 不可靠传输 面向数据报
+网络字节序 我们已经知道,内存中的多字节数据相对于内存地址有大端和小端之分, 磁盘文件中的多字节数据相对于文件中的偏移地址也有大端小端之分, 网络数据流同样有大端小端之分. 那么如何定义网络数据流的地址呢?
+发送主机通常将发送缓冲区中的数据按内存地址从低到高的顺序发出; 接收主机把从网络上接到的字节依次保存在接收缓冲区中,也是按内存地址从低到高的顺序保存; 因此,网络数据流的地址应这样规定:先发出的数据是低地址,后发出的数据是高地址. TCP/IP协议规定,网络数据流应采用大端字节序,即低地址高字节. 不管这台主机是大端机还是小端机, 都会按照这个TCP/IP规定的网络字节序来发送/接收数据; 如果当前发送主机是小端, 就需要先将数据转成大端; 否则就忽略, 直接发送即可; 为使网络程序具有可移植性,使同样的C代码在大端和小端计算机上编译后都能正常运行,可以调用以下库函数做网络字节序和主机字节序的转换。"/>
+<meta name="application-name" content="My cool site">
+<meta name="apple-mobile-web-app-title" content="My cool site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" /><link rel="next" href="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/example.org\/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B\/"
+        },"genre": "posts","wordcount":  280 ,
+        "url": "http:\/\/example.org\/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B\/","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "xxxx"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="My New Hugo Site"></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="My New Hugo Site"></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>xxxx</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;280 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#理解源ip地址和目的ip地址">理解源IP地址和目的IP地址</a></li>
+    <li><a href="#认识端口号">认识端口号</a></li>
+    <li><a href="#认识tcpudp协议">认识TCP、UDP协议</a></li>
+    <li><a href="#网络字节序">网络字节序</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#socket-常见api">socket 常见API</a></li>
+    <li><a href="#sockaddr结构">sockaddr结构</a></li>
+    <li><a href="#地址转换函数">地址转换函数</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#tcp-socket-api-详解">TCP socket API 详解</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="预备知识">预备知识</h1>
+<h2 id="理解源ip地址和目的ip地址">理解源IP地址和目的IP地址</h2>
+<p>在IP数据包头部中, 有两个IP地址, 分别叫做源IP地址, 和目的IP地址.</p>
+<p>思考: 我们光有IP地址就可以完成通信了嘛? 想象一下发qq消息的例子, 有了IP地址能够把消息发送到对方的机器上, 但是还需要有一个其他的标识来区分出, 这个数据要给哪个程序（进程）进行解析.</p>
+<h2 id="认识端口号">认识端口号</h2>
+<ul>
+<li>端口号(port)是传输层协议的内容.</li>
+<li>端口号是一个2字节16位的整数;</li>
+<li>端口号用来标识一个进程, 告诉操作系统, 当前的这个数据要交给哪一个进程来处理;</li>
+<li>IP地址 + 端口号能够标识网络上的某一台主机的某一个进程;</li>
+<li>同一台主机上，一个端口号只能被一个进程占用.</li>
+<li>另外, 一个进程可以绑定多个端口号; 但是一个端口号不能被多个进程绑定;</li>
+</ul>
+<p>理解 &ldquo;端口号&rdquo; 和 &ldquo;进程ID&rdquo;：解耦</p>
+<p>理解源端口号和目的端口号：传输层协议(TCP和UDP)的数据段中有两个端口号, 分别叫做源端口号和目的端口号. 就是在描述 &ldquo;数据是哪个进程发的, 要发给哪个进程&rdquo;;</p>
+<h2 id="认识tcpudp协议">认识TCP、UDP协议</h2>
+<p>此处我们先对TCP(Transmission Control Protocol 传输控制协议)有一个直观的认识; 后面我们再详细讨论TCP的一 些细节问题.</p>
+<p>传输层协议 有连接 可靠传输 面向字节流</p>
+<p>此处我们也是对UDP(User Datagram Protocol 用户数据报协议)有一个直观的认识; 后面再详细讨论.</p>
+<p>传输层协议 无连接 不可靠传输 面向数据报</p>
+<h2 id="网络字节序">网络字节序</h2>
+<p>我们已经知道,内存中的多字节数据相对于内存地址有大端和小端之分, 磁盘文件中的多字节数据相对于文件中的偏移地址也有大端小端之分, 网络数据流同样有大端小端之分. 那么如何定义网络数据流的地址呢?</p>
+<ul>
+<li>发送主机通常将发送缓冲区中的数据按内存地址从低到高的顺序发出;</li>
+<li>接收主机把从网络上接到的字节依次保存在接收缓冲区中,也是按内存地址从低到高的顺序保存;</li>
+<li>因此,网络数据流的地址应这样规定:先发出的数据是低地址,后发出的数据是高地址.</li>
+<li><strong>TCP/IP协议规定,网络数据流应采用大端字节序,即低地址高字节.</strong></li>
+<li>不管这台主机是大端机还是小端机, 都会按照这个TCP/IP规定的网络字节序来发送/接收数据;</li>
+<li>如果当前发送主机是小端, 就需要先将数据转成大端; 否则就忽略, 直接发送即可;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231334530.png"
+        data-srcset="C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231334530.png, C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231334530.png 1.5x, C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231334530.png 2x"
+        data-sizes="auto"
+        alt="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230812231334530.png"
+        title="image-20230812231334530" /></p>
+<p><strong>为使网络程序具有可移植性,使同样的C代码在大端和小端计算机上编译后都能正常运行</strong>,可以调用以下库函数做网络字节序和主机字节序的转换。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231433096.png"
+        data-srcset="C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231433096.png, C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231433096.png 1.5x, C:%5cUsers%5cyangzilong%5cAppData%5cRoaming%5cTypora%5ctypora-user-images%5cimage-20230812231433096.png 2x"
+        data-sizes="auto"
+        alt="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230812231433096.png"
+        title="image-20230812231433096" /></p>
+<blockquote>
+<p>这些函数名很好记,h表示host,n表示network,l表示32位长整数,s表示16位短整数。</p>
+<p>例如htonl表示将32位的长整数从主机字节序转换为网络字节序,例如将IP地址转换后准备发送。</p>
+<p>如果主机是小端字节序,这些函数将参数做相应的大小端转换然后返回;</p>
+<p>如果主机是大端字节序,这些函数不做转换,将参数原封不动地返回。</p>
+</blockquote>
+<h1 id="socket编程接口">socket编程接口</h1>
+<h2 id="socket-常见api">socket 常见API</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="c1">// 创建 socket 文件描述符 (TCP/UDP, 客户端 + 服务器)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">socket</span><span class="p">(</span><span class="kt">int</span> <span class="n">domain</span><span class="p">,</span> <span class="kt">int</span> <span class="n">type</span><span class="p">,</span> <span class="kt">int</span> <span class="n">protocol</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 绑定端口号 (TCP/UDP, 服务器) 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">bind</span><span class="p">(</span><span class="kt">int</span> <span class="n">socket</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="nc">sockaddr</span> <span class="o">*</span><span class="n">address</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"> <span class="n">socklen_t</span> <span class="n">address_len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 开始监听socket (TCP, 服务器)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">listen</span><span class="p">(</span><span class="kt">int</span> <span class="n">socket</span><span class="p">,</span> <span class="kt">int</span> <span class="n">backlog</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 接收请求 (TCP, 服务器)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">accept</span><span class="p">(</span><span class="kt">int</span> <span class="n">socket</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span> <span class="n">address</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"> <span class="n">socklen_t</span><span class="o">*</span> <span class="n">address_len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 建立连接 (TCP, 客户端)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">connect</span><span class="p">(</span><span class="kt">int</span> <span class="n">sockfd</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="nc">sockaddr</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"> <span class="n">socklen_t</span> <span class="n">addrlen</span><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>前面讲过,struct sockaddr *是一个通用指针类型,myaddr参数实际上可以接受多种协议的sockaddr结构体,而它们的长度各不相同,所以需要第三个参数addrlen指定结构体的长度;</p>
+<h2 id="sockaddr结构">sockaddr结构</h2>
+<p>socket API是一层抽象的网络编程接口（程序通用性，兼容性比较好）,适用于各种底层网络协议,如IPv4、IPv6,以及后面要讲的UNIX Domain Socket. 然而, 各种网络协议的地址格式并不相同.</p>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230812232034204.png" alt="image-20230812232034204" style="zoom:80%;" />
+<ul>
+<li>
+<p>IPv4和IPv6的地址格式定义在netinet/in.h中,IPv4地址用sockaddr_in结构体表示,包括16位地址类型, 16 位端口号和32位IP地址.</p>
+</li>
+<li>
+<p>IPv4、IPv6地址类型分别定义为常数AF_INET、AF_INET6. 这样,只要取得某种sockaddr结构体的首地址, 不需要知道具体是哪种类型的sockaddr结构体,就可以根据地址类型字段确定结构体中的内容.</p>
+</li>
+<li>
+<p>socket API可以都用struct sockaddr *类型表示, 在使用的时候需要强制转化成sockaddr_in; 这样的好 处是程序的通用性, 可以接收IPv4, IPv6, 以及UNIX Domain Socket各种类型的sockaddr结构体指针做为参数;</p>
+</li>
+</ul>
+<h2 id="地址转换函数">地址转换函数</h2>
+<p>本节只介绍基于IPv4的socket网络编程,sockaddr_in中的成员struct in_addr sin_addr表示32位 的IP 地址 但是我们通常用点分十进制的字符串表示IP 地址,<strong>以下函数可以在字符串表示和in_addr表示之间转换;</strong></p>
+<p><code>inet_addr(_ip.c_str())</code>  服务端bind</p>
+<p><code>inet_ntoa(client.sin_addr)</code>  服务端accept获取客户端连接</p>
+<p>&hellip;&hellip;&hellip;&hellip;.</p>
+<h1 id="简单的udptcp网络程序">简单的UDP/TCP网络程序</h1>
+<p><a href="https://github.com/DaysOfExperience/Linux_Network_Programming" target="_blank" rel="noopener noreffer ">hhhhhh</a></p>
+<blockquote>
+<p>结合代码稍微一看就行了，不难且大概率不考~</p>
+</blockquote>
+<h2 id="tcp-socket-api-详解">TCP socket API 详解</h2>
+<p><code>int socket(int domain, int type, int protocol)</code></p>
+<ul>
+<li>socket()打开一个网络通讯端口,如果成功的话,就像open()一样返回一个文件描述符;应用程序可以像读写文件一样用read/write在网络上收发数据。（一切皆文件）</li>
+</ul>
+<p><code>int bind(int socket, const struct sockaddr *address, socklen_t address_len)</code></p>
+<ul>
+<li>
+<p>服务器程序所监听的网络地址和端口号通常是固定不变的,客户端程序得知服务器程序的地址和端口号后 就可以向服务器发起连接; 服务器需要调用bind绑定一个固定的网络地址和端口号;</p>
+</li>
+<li>
+<p>bind()的作用是将参数sockfd和myaddr绑定在一起, 使sockfd这个用于网络通讯的文件描述符监听myaddr所描述的地址和端口号;</p>
+</li>
+<li>
+<p>网络地址为INADDR_ANY, 这个宏表示本地的任意IP地址,因为服务器可能有多个网卡,每个网卡也可能绑定多个IP 地址, 这样设置可以在所有的IP地址上监听,直到与某个客户端建立了连接时才确定下来到底用哪个IP地址;</p>
+</li>
+</ul>
+<p><code>int listen(int socket, int backlog)</code></p>
+<ul>
+<li>listen()声明sockfd处于监听状态, 并且最多允许有<strong>backlog</strong>个客户端处于连接等待状态, 如果接收到更多的连接请求就忽略, 具体细节同学们课后深入研究;</li>
+</ul>
+<p><code>int accept(int socket, struct sockaddr* address, socklen_t* address_len)</code></p>
+<ul>
+<li>三次握手完成后, 服务器调用accept()接受连接;</li>
+<li>如果服务器调用accept()时还没有客户端的连接请求,就阻塞等待直到有客户端连接上来;</li>
+<li>addr是一个输出型参数,accept()返回时传出客户端的地址和端口号;</li>
+<li>如果给addr参数传NULL,表示不关心客户端的地址;</li>
+<li>addrlen参数是一个传入传出参数(value-result argument), 传入的是调用者提供的, 缓冲区addr的长度 以避免缓冲区溢出问题, 传出的是客户端地址结构体的实际长度(有可能没有占满调用者提供的缓冲区);</li>
+</ul>
+<p><code>int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);</code></p>
+<ul>
+<li>客户端需要调用connect()连接服务器</li>
+<li>connect和bind的参数形式一致, 区别在于bind的参数是自己的地址, 而connect的参数是对方的地址;</li>
+</ul>
+<p>补充说明：关于bind函数的调用</p>
+<ul>
+<li>由于客户端不需要固定的端口号,因此不必调用bind(),客户端的端口号由内核自动分配.</li>
+<li>客户端不是不允许调用bind(), 只是没有必要调用bind()固定一个端口号. 否则如果在同一台机器上启动 多个客户端, 就会出现端口号被占用导致不能正确建立连接;</li>
+<li>服务器也不是必须调用bind(), 但如果服务器不调用bind(), 内核会自动给服务器分配监听端口, 每次启动 服务器时端口号都不一样, 客户端要连接服务器就会遇到麻烦;</li>
+</ul>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" data-title="" data-via="xxxx"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" data-title=""><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" data-title=""><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://example.org/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" data-title=""><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+            <a href="/linux%E7%BD%91%E7%BB%9C-%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.115.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">xxxx</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
