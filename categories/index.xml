@@ -1,7 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Categories - Category - My New Hugo Site</title>
-        <link>http://example.org/categories/</link>
-        <description>Categories - Category - My New Hugo Site</description>
-        <generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="http://example.org/categories/" rel="self" type="application/rss+xml" /></channel>
+        <title>Categories - 分类 - PTE</title>
+        <link>https://luckly.work/categories/</link>
+        <description>Categories - 分类 - PTE</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>1149367636@qq.com (PTE)</managingEditor>
+            <webMaster>1149367636@qq.com (PTE)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="https://luckly.work/categories/" rel="self" type="application/rss+xml" /></channel>
 </rss>

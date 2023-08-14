@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - PTE</title><meta name="Description" content="PTE"><meta property="og:title" content="" />
+<meta property="og:description" content="todo （说实话，lee都没注意这个）???tcp发送缓冲区中有报头吗？这个添加序号具体是怎么添加的？还是说目前就简单理解即可？ （lee no）序号" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://luckly.work/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82/" /><meta property="og:image" content="https://luckly.work/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://luckly.work/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="todo （说实话，lee都没注意这个）???tcp发送缓冲区中有报头吗？这个添加序号具体是怎么添加的？还是说目前就简单理解即可？ （lee no）序号"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82/" /><link rel="prev" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C4-%E7%BD%91%E7%BB%9C%E5%B1%82ip/" /><link rel="next" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82\/"
+        },"image": ["https:\/\/luckly.work\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  18157 ,
+        "url": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82\/","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": "https:\/\/luckly.work\/images\/avatar.png"},"author": {
+                "@type": "Person",
+                "name": "PTE"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/categories/documentation/"> 文档 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i> Github </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/categories/documentation/" title="">文档</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i>Github</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>PTE</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 18157 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 37 分钟&nbsp;<span id="/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82/" class="leancloud_visitors" data-flag-title="">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#todo">todo</a></li>
+    <li><a href="#计算机网络的层状结构">计算机网络的层状结构</a></li>
+    <li><a href="#传输层">传输层</a></li>
+    <li><a href="#udp协议">UDP协议</a>
+      <ul>
+        <li><a href="#udp报文格式">UDP报文格式</a></li>
+        <li><a href="#理解udptcp报文的本质">理解UDP/TCP报文的本质</a></li>
+        <li><a href="#udp的特点">UDP的特点</a>
+          <ul>
+            <li><a href="#如何让udp实现可靠传输">如何让UDP实现可靠传输</a></li>
+          </ul>
+        </li>
+        <li><a href="#udp的缓冲区">UDP的缓冲区</a></li>
+        <li><a href="#udp报文进行解包去报头发生在哪个阶段">UDP报文进行解包（去报头）发生在哪个阶段？</a></li>
+        <li><a href="#sendtorecvfromsendrecvwriteread-io类接口">sendto/recvfrom/send/recv/write/read IO类接口</a></li>
+        <li><a href="#udp是全双工的">UDP是全双工的</a></li>
+        <li><a href="#udp注意事项">UDP注意事项</a></li>
+        <li><a href="#基于udp的应用层协议">基于UDP的应用层协议</a></li>
+        <li><a href="#udp协议实现简单聊天室cs">UDP协议实现简单聊天室（c+s）</a></li>
+      </ul>
+    </li>
+    <li><a href="#tcp协议">TCP协议</a>
+      <ul>
+        <li><a href="#tcp协议段格式">TCP协议段格式</a></li>
+        <li><a href="#tcp的特点">TCP的特点</a></li>
+        <li><a href="#tcp全双工具有发送缓冲区和接收缓冲区">TCP全双工，具有发送缓冲区和接收缓冲区。</a></li>
+        <li><a href="#连接管理机制">连接管理机制</a>
+          <ul>
+            <li><a href="#如何理解连接">如何理解连接</a></li>
+            <li><a href="#tcp建立连接的三次握手">TCP建立连接的三次握手</a></li>
+            <li><a href="#tcp断开连接的四次挥手">TCP断开连接的四次挥手</a></li>
+            <li><a href="#保活机制">保活机制</a></li>
+            <li><a href="#三握四挥的状态变化">三握四挥的状态变化</a>
+              <ul>
+                <li><a href="#服务端状态转化">服务端状态转化:</a></li>
+                <li><a href="#客户端状态转化">客户端状态转化:</a></li>
+              </ul>
+            </li>
+            <li><a href="#问题补充">问题补充</a></li>
+            <li><a href="#四次挥手的close_wait状态">四次挥手的CLOSE_WAIT状态</a></li>
+            <li><a href="#四次挥手的time_wait状态">四次挥手的TIME_WAIT状态</a>
+              <ul>
+                <li><a href="#为什么要有time_wait状态且还是2msl">为什么要有TIME_WAIT状态？（且还是2MSL）</a></li>
+                <li><a href="#解决time_wait状态引起的bind失败的方法">解决TIME_WAIT状态引起的bind失败的方法</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#可靠传输">可靠传输</a>
+          <ul>
+            <li><a href="#确认应答ack机制">确认应答（ACK）机制</a></li>
+            <li><a href="#超时重传">超时重传</a></li>
+          </ul>
+        </li>
+        <li><a href="#避免丢包重传">避免丢包重传</a>
+          <ul>
+            <li><a href="#流量控制16位窗口大小">流量控制（16位窗口大小）</a></li>
+            <li><a href="#拥塞控制">拥塞控制</a></li>
+          </ul>
+        </li>
+        <li><a href="#挽救传输性能">挽救传输性能</a>
+          <ul>
+            <li><a href="#滑动窗口">滑动窗口</a></li>
+            <li><a href="#快重传">快重传</a></li>
+            <li><a href="#延迟应答">延迟应答</a></li>
+            <li><a href="#捎带应答">捎带应答</a></li>
+          </ul>
+        </li>
+        <li><a href="#tcp面向字节流">TCP面向字节流</a></li>
+        <li><a href="#tcp粘包问题">TCP粘包问题</a></li>
+        <li><a href="#tcp异常情况你的呢">TCP异常情况（你的呢</a></li>
+        <li><a href="#基于tcp应用层协议">基于TCP应用层协议</a></li>
+        <li><a href="#tcpudp对比">TCP/UDP对比</a></li>
+        <li><a href="#listen的第二个参数">listen的第二个参数</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#tcp全连接队列的意义">TCP全连接队列的意义</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#使用-wireshark-分析-tcp-通信流程">使用 wireshark 分析 TCP 通信流程</a></li>
+        <li><a href="#各种版本的基于tcp协议的cs">各种版本的基于TCP协议的cs</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="todo">todo</h1>
+<p>（说实话，lee都没注意这个）???tcp发送缓冲区中有报头吗？这个添加序号具体是怎么添加的？还是说目前就简单理解即可？</p>
+<p>（lee no）序号到底是什么，序号的细节</p>
+<p>为什么三次握手，两次不行吗？四次不行吗？</p>
+<h1 id="计算机网络的层状结构">计算机网络的层状结构</h1>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/86c98cd25c6c4aa1a81b365e13e4496a.png"
+        data-srcset="https://img-blog.csdnimg.cn/86c98cd25c6c4aa1a81b365e13e4496a.png, https://img-blog.csdnimg.cn/86c98cd25c6c4aa1a81b365e13e4496a.png 1.5x, https://img-blog.csdnimg.cn/86c98cd25c6c4aa1a81b365e13e4496a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/86c98cd25c6c4aa1a81b365e13e4496a.png"
+        title="img" /></p>
+<p>计算机网络是层状的（分层最大的好处在于 &ldquo;封装&rdquo;），UDP/TCP协议是传输层协议。</p>
+<p>我们使用的网络编程系统调用就是传输层提供的接口。例如accept, connect, listen, socket&hellip;</p>
+<p>网络传输时，向下要封装报头，向上要解包，也就是去掉报头。发送方需要将应用层数据包逐层向下，添加每层的报头进行封装。接收方的数据链路层通过物理层接收到对方传来的报文时，需要逐层向上去掉报头，进行解包，提取出最终的有效载荷。也就是网络发送方真正要传输的数据。</p>
+<p>几乎任何协议，都要首先解决两个问题：1. 如何分离（将报头和有效载荷拆分开，接收方网络协议栈的每一层都需要做的）和如何封装（发送方做的，添加报头）2. 如何向上交付（有效载荷拆分出来之后，交付给上一层）</p>
+<p>套接字 = IP + 端口号。IP是网络层IP协议报头包含的字段，标识着网络传输时数据从哪个主机传输给哪个主机。端口号是传输层协议报头包含的字段，对应着传输层报文中的有效载荷（应用层数据包）应该交付给该主机上的哪个进程。这样对应进程收到传输层的有效载荷之后，就可以根据应用层协议，将应用层报文中的有效载荷提取出来。</p>
+<h1 id="传输层">传输层</h1>
+<p><strong>传输层是整个网络体系结构中的关键层次之一，主要负责两个主机中进程之间的数据传输。
+在传输层中常见的协议就是TCP协议（传输控制协议），UDP协议（用户数据报协议）</strong></p>
+<h1 id="udp协议">UDP协议</h1>
+<p><strong>UDP协议，即用户数据报协议</strong></p>
+<h2 id="udp报文格式">UDP报文格式</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/acdccc881a2b4c6590ddffe15b46d367.png"
+        data-srcset="https://img-blog.csdnimg.cn/acdccc881a2b4c6590ddffe15b46d367.png, https://img-blog.csdnimg.cn/acdccc881a2b4c6590ddffe15b46d367.png 1.5x, https://img-blog.csdnimg.cn/acdccc881a2b4c6590ddffe15b46d367.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/acdccc881a2b4c6590ddffe15b46d367.png"
+        title="img" /></p>
+<ol>
+<li><strong>源端口号，目的端口号</strong>：标明了此UDP报文是从对应主机上的哪个进程发出的，发送给哪个进程。</li>
+<li><strong>16位数据报长度</strong>：标志UDP首部与发送数据的长度之和，大小为2^16，即64K，65535。</li>
+<li><strong>16位校验和</strong>：用于接收端检验接收的数据与发送的数据是否一致，不一致则丢弃。校验方法：二进制反码求和，即对报文从头开始的每个字节进行取反相加，高出16位则截断高位，与低16位相加，得到校验和。</li>
+<li>如何解包（分离）：UDP采用固定长度报头，接收方将报文前8字节提取出，剩下的就是有效载荷。</li>
+<li>如何向上交付：接收方的OS的传输层收到UDP报文之后，16位目的端口号标明了对应进程。（该进程bind了端口号，在内核中，存储诸如port : PCB指针这样的KV类型，就可以通过端口号找到对应的进程）
+（这也是为什么在应用层编写UDP代码时，定义端口号时，喜欢定义为uint16_t，正是因为传输层UDP协议使用的端口号为16位的。）</li>
+<li>UDP如何提取到整个完整报文：16位UDP长度字段</li>
+</ol>
+<h2 id="理解udptcp报文的本质">理解UDP/TCP报文的本质</h2>
+<img src="https://img-blog.csdnimg.cn/67dd58f88bb14056ba577e6e4349da9e.png" alt="img" style="zoom:80%;" />
+<ol>
+<li><strong>UDP/TCP报头在操作系统中本质就是一个位段类型。</strong></li>
+<li>OS中会有很多UDP报文，TCP报文，那么，OS需要管理这些报文，即先描述，再组织。所以报文在内核中并非仅位段 + 有效载荷。还会有其他属性字段。</li>
+</ol>
+<h2 id="udp的特点">UDP的特点</h2>
+<p>UDP传输过程类似于寄信。</p>
+<p><strong>无连接，不可靠，面向数据报</strong></p>
+<ul>
+<li>
+<p><strong>无连接</strong>: **即不需要建立连接也可以发送数据。**只需要知道对端的端口号和ip地址就可以直接传输。就比如寄快递，只需要知道人家的地址就可以送过去，不需要与别人提前建立联系</p>
+</li>
+<li>
+<p><strong>不可靠</strong>: <strong>即不能保证数据安全有序的到达对端</strong>。因为UDP不存在重传机制与确认机制，所以并不能保证数据能够到达对端，可能会在途中出现丢包，即使丢包了也不会报错和重传。UDP的报头中不存在序号，并且是无连接的，所以他没法保证数据到达后的顺序，**需要我们自己在应用层进行包序管理。**UDP协议层也不会给应用层返回任何错误信息，更不会重传等等;</p>
+</li>
+<li>
+<p><strong>面向数据报</strong>: <strong>不能够灵活的控制读写数据的次数和数据的长度</strong> :
+应用层交给UDP多长的报文, UDP原样发送, 既不会拆分, 也不会合并;   用UDP传输100个字节的数据: 如果发送端调用一次sendto, 发送100个字节, 那么接收端也必须调用对应的一次recvfrom, 接收100个字节; 而不能循环调用10次recvfrom, 每次接收10个字节;  发送端的sendto和接收端的recvfrom次数是一样的。</p>
+</li>
+</ul>
+<p><strong>数据报长度字段只有16位，报头要占8个字节，所以数据报的长度不能大于(64K- 8) 。</strong>
+UDP给应用层传下来的报文添加首部后就会直接转交给网络层，所以对于较大的数据，需要我们自己在应用层进行分包和包序管理进行多次发送。</p>
+<h3 id="如何让udp实现可靠传输">如何让UDP实现可靠传输</h3>
+<p>如果光光依靠UDP本身是无法实现可靠传输的，因为其无法保证数据有序且到达，因此应当参考TCP的可靠性机制, 在应用层实现类似的逻辑。</p>
+<p>如</p>
+<ul>
+<li>引入序列号，保证数据有序。</li>
+<li>引入确认应答，确保对端收到了数据。</li>
+<li>引入超时重传，如果一段时间内没有收到应答，就重发数据，保证数据不会丢失。</li>
+</ul>
+<h2 id="udp的缓冲区">UDP的缓冲区</h2>
+<p>UDP没有真正意义上的发送缓冲区，调用sendto会直接交给内核, 由内核将数据进一步传给网络层协议进行后续的传输动作;</p>
+<p>UDP具有接收缓冲区，但是因为UDP不可靠，没有任何传输控制行为。故这个接收缓冲区无法保证接收到的UDP报的顺序和发送UDP报的顺序一致。如果缓冲区满了，再到达的UDP数据就会被丢弃。</p>
+<blockquote>
+<p><strong>（？？？？？？？提醒一下，接收缓冲区中存储的是UDP报文中去掉报头之后的有效载荷）真的小丑，前面这句话完全是错的</strong></p>
+</blockquote>
+<h2 id="udp报文进行解包去报头发生在哪个阶段">UDP报文进行解包（去报头）发生在哪个阶段？</h2>
+<p>UDP的接收缓冲区中存储的是完整的UDP报文，而不是去报头之后的有效载荷！！！</p>
+<p>UDP报文的解包（去掉UDP报头）通常发生在传输层协议栈内核处理接收到的数据时。这个过程通常包括以下几个阶段：</p>
+<ol>
+<li><strong>数据接收：</strong> 当操作系统内核的UDP接收缓冲区接收到UDP数据报时，操作系统会将完整的UDP数据报（包括UDP报头和数据部分）存储在接收缓冲区中。</li>
+<li><strong>协议栈处理：</strong> 接下来，操作系统的协议栈会介入处理这个接收到的UDP数据报。协议栈是操作系统内置的网络协议处理程序，负责在不同层次上处理网络数据。在传输层，UDP协议栈会负责处理UDP数据。</li>
+<li><strong>解析报头：</strong> 在协议栈中，UDP协议会解析UDP数据报的报头部分。这包括解析源端口、目标端口、长度和校验和等信息。操作系统可能会校验校验和以确保数据的完整性。</li>
+<li><strong>去掉报头：</strong> 一旦UDP协议栈解析了UDP报头并完成校验，它会将UDP报头从数据中去掉，只留下数据部分。这个阶段实际上就是你所描述的解包过程。解包后的数据将会被传递给操作系统内核的上层应用程序，这样应用程序就能够获取到不包含UDP报头的原始数据。</li>
+<li><strong>传递给应用层：</strong> 解包后的数据被传递给应用层，通常通过调用类似于 <code>recvfrom</code> 函数来获取。应用层可以进一步处理这些数据，根据需要解析、处理或者将其显示给用户。</li>
+</ol>
+<p>总之，解包UDP报文的过程发生在操作系统协议栈的传输层处理阶段，它涉及解析UDP报头以及去掉报头部分，使应用程序能够获取到不包含UDP报头的原始数据。</p>
+<p>是的，你理解得很准确。在进程没有调用 <code>recvfrom</code> 函数的情况下，接收到的UDP报文会存储在操作系统内核的UDP接收缓冲区中等待处理。当你调用 <code>recvfrom</code> 函数时，操作系统的协议栈会触发解析UDP数据报的过程，然后将解析后的数据传递给应用程序。这个过程包括解析UDP报头、去掉报头部分以及将数据交付给应用层，使得应用程序能够获取到不包含UDP报头的原始数据。这样的机制允许应用程序根据需要控制数据的接收时机，并在需要时处理和使用接收到的数据。</p>
+<h2 id="sendtorecvfromsendrecvwriteread-io类接口">sendto/recvfrom/send/recv/write/read IO类接口</h2>
+<img src="https://img-blog.csdnimg.cn/0fdefd98f56d403a93996bef09261dbf.png" alt="img" style="zoom:67%;" />
+<p>我们调用UDP的sendto/recvfrom和TCP的recv/send时，表面上是网络发送和网络接收函数，实质上，<strong>它们只是拷贝函数，将应用层缓冲区的数据拷贝到发送缓冲区，将接收缓冲区中的数据拷贝到应用层缓冲区中（注意，这个过程中需要进行解包，看上方）。</strong>（特别是对于TCP而言）（注意，UDP没有发送缓冲区，所以为虚线，若TCP则为实线。）</p>
+<p>将数据拷贝到发送缓冲区之后，什么时候进行网络发送，发多少，出错了怎么办，这些都是由传输层协议决定的。缓冲区也是传输层提供的。（针对TCP）</p>
+<h2 id="udp是全双工的">UDP是全双工的</h2>
+<p>UDP没有发送缓冲区，有接收缓冲区，数据在网络中的发送和接收互不影响，可以同时进行，因此为全双工的。UDP的socket既能读，也能同时写。</p>
+<h2 id="udp注意事项">UDP注意事项</h2>
+<p>我们注意到, UDP协议首部中有一个16位的最大长度. 也就是说一个UDP能传输的数据最大长度是64K(包含UDP首部8字节). 然而64K在当今的互联网环境下, 是一个非常小的数字. <strong>如果我们需要传输的数据超过64K, 就需要在应用层手动的分包, 多次发送, 并在接收端手动拼装;</strong></p>
+<h2 id="基于udp的应用层协议">基于UDP的应用层协议</h2>
+<ul>
+<li>NFS: 网络文件系统</li>
+<li>TFTP: 简单文件传输协议</li>
+<li>DHCP: 动态主机配置协议</li>
+<li>BOOTP: 启动协议(用于无盘设备启动)</li>
+<li>DNS: 域名解析协议</li>
+</ul>
+<p>当然, 也包括你自己写UDP程序时自定义的应用层协议;</p>
+<h2 id="udp协议实现简单聊天室cs">UDP协议实现简单聊天室（c+s）</h2>
+<p><a href="https://github.com/DaysOfExperience/Linux_Network_Programming/tree/main/UDP" target="_blank" rel="noopener noreffer ">zzz</a></p>
+<blockquote>
+<p>上方是使用UDP协议实现的一个简单的聊天室的server和client。</p>
+<p>服务端：socket创建套接字，bind绑定ip和端口，然后开始recvfrom，业务处理，sendto（因为UDP无连接，不可靠） 这里的业务处理很简单，存在一个std::unordered_map&lt;std::string, struct sockaddr_in&gt; _map; // [ip:port] | struct，记录当前聊天室的所有客户端，value是这个客户端对应的sockaddr_in，将来用于sendto。将每个客户端发来的数据和它的ip:port字符串进行拼接，发送给这个unordered_map中的所有客户端。在客户端第一次发信息过来时，会自动加入聊天室，也就是进入unordered_map中</p>
+<p>客户端：socket创建套接字，不需要调用bind，创建两个线程，一个收取网络数据，另一个获取用户输入，发送网络数据。接收线程只需要套接字，发送线程需要套接字，server_ip，server_port（用于sendto）</p>
+<p>因为接收线程和发送线程的打印信息存在混乱的情况。所以将接收用户输入的线程的打印信息设为cerr，也就是往标准错误中输出。而接收服务端发送的网络数据的线程的输出信息定为cout。再通过mkfifo创建管道文件，将客户端的标准输出重定向到管道文件中。解决输出信息混乱的问题。</p>
+</blockquote>
+<h1 id="tcp协议">TCP协议</h1>
+<p>TCP全称为 &ldquo;传输控制协议(Transmission Control Protocol&rdquo;)</p>
+<p><strong>TCP面向连接，具有可靠性，面向字节流。</strong></p>
+<h2 id="tcp协议段格式">TCP协议段格式</h2>
+<img src="https://img-blog.csdnimg.cn/ce51bd5dfc014df1a71a45890e081bad.png" alt="img"  />
+<ul>
+<li>16位源/目的端口号：表示数据从哪个进程来，到哪个进程去。</li>
+<li>16位校验和：发送端填充, CRC校验. 接收端校验不通过, 则认为数据有问题. 此处的检验和不光包含TCP首部, 也 包含TCP数据部分.</li>
+<li>选项：暂不考虑&hellip;.</li>
+<li>数据：就是传输层报文携带的有效载荷，在TCP/IP网络通信过程中，一般为应用层报文！</li>
+<li>保留位（6bit位）：该字段的位设置为零，这些位保留，供以后扩用。</li>
+<li>16位紧急指针：标识哪部分数据是紧急数据;</li>
+<li>4位首部长度字段：TCP报文如何进行解包（分离）：报头中，有一个4位首部长度字段，表征着该TCP报头有多少个32bit（4字节），TCP报头不是定长的，而是变长的，因为选项内容不定。所以，TCP头部最大为15*4=60字节。即20~60字节。
+所以，解包的大致过程为：提取20字节，获取4位首部长度（在20字节中的位置固定），x*4-20为选项的长度。提取出x*4-20字节后，剩下的就是有效载荷（也就是应该交给应用层的数据）</li>
+<li>6位标志位：TCP报文有多种类型（属性），这6个标志位是用于标记报文类型的，比如ACK标志位若为1，则代表这个报文有ACK属性，即表示确认序号有效（见下方确认应答（ACK）机制）（多个标志位可叠加，一个报文可有多种属性类型）
+URG: 紧急指针是否有效（TCP因为有序号，故数据是按序到达的，URG配合16位紧急指针可以实现将有效载荷中的某紧急数据提前向上交付）
+ACK: 确认序号是否有效（凡是该报文具有应答特征，该标志位都会被设置为1。大部分网络报文ACK都是被设置为1的，因为TCP有捎带应答机制。但是第一个TCP连接请求报文的ACK标志位不为1）
+PSH: 提示接收端应用程序立刻从TCP缓冲区把数据读走（联系流量控制和滑动窗口机制）
+RST: 对方要求重新建立连接; 我们把携带RST标识的称为<strong>复位报文段</strong>（比如一端网线断了，则两端对于连接建立认知不一致）
+SYN: 请求建立连接; 我们把携带SYN标识的称为<strong>同步报文段</strong>
+FIN: 通知对方, 本端要关闭了, 我们称携带FIN标识的为<strong>结束报文段</strong></li>
+</ul>
+<h2 id="tcp的特点">TCP的特点</h2>
+<p>其主要特点为：面向连接，可靠，面向字节流。</p>
+<ul>
+<li><strong>面向连接</strong>：通信必须在建立连接之后，通过连接管理机制实现。</li>
+<li><strong>可靠传输</strong>:  保证数据安全有序的到达对端</li>
+<li><strong>面向字节流</strong>：以字节流的方式传输</li>
+</ul>
+<h2 id="tcp全双工具有发送缓冲区和接收缓冲区">TCP全双工，具有发送缓冲区和接收缓冲区。</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/a42a7300ba27408b86bbfc21ed5b0a9a.png"
+        data-srcset="https://img-blog.csdnimg.cn/a42a7300ba27408b86bbfc21ed5b0a9a.png, https://img-blog.csdnimg.cn/a42a7300ba27408b86bbfc21ed5b0a9a.png 1.5x, https://img-blog.csdnimg.cn/a42a7300ba27408b86bbfc21ed5b0a9a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/a42a7300ba27408b86bbfc21ed5b0a9a.png"
+        title="img" /></p>
+<p>TCP全双工，client和server都有发送缓冲区与接收缓冲区。</p>
+<p>我们编写TCP代码时，使用的send，recv方法，其实只是拷贝函数，而不是网络收发函数。send的作用是把应用层的缓冲区数据拷贝到发送缓冲区，recv的作用是把接收缓冲区中的数据拷贝到应用层缓冲区。</p>
+<p>而拷贝到发送缓冲区之后，什么时候发，发多少，丢包出错了怎么办，这都是TCP协议需要管的，所以称之为传输控制协议！（好兄弟，TCP是面向字节流的）</p>
+<p>这两对缓冲区之间的数据流动互不影响，所以TCP是全双工的！</p>
+<h2 id="连接管理机制">连接管理机制</h2>
+<p><strong>TCP通过首部的标志位来实现连接的管理，完成通信。</strong></p>
+<p>TCP要经过三次握手建立连接，四次挥手断开连接。（TCP面向连接！）</p>
+<h3 id="如何理解连接">如何理解连接</h3>
+<p>对于一个server来说，可能会有很多client连接server，所以server端一定会存在大量的连接。**OS需要管理这些连接！则需要先描述，再组织。**所以所谓的连接，本质就是操作系统内核中的一种数据结构类型。当建立连接成功时，就是在内存中创建对应的连接对象。再对多个连接对象进行某种数据结构的组织，方便管理。</p>
+<h3 id="tcp建立连接的三次握手">TCP建立连接的三次握手</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/2020120816482514.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70"
+        data-srcset="https://img-blog.csdnimg.cn/2020120816482514.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70, https://img-blog.csdnimg.cn/2020120816482514.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70 1.5x, https://img-blog.csdnimg.cn/2020120816482514.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/2020120816482514.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70"
+        title="三次握手喽~" /></p>
+<ol>
+<li>
+<p>TCP三次握手的过程中，并非是传输SYN，ACK&hellip;而是传输TCP报文，这个报文的SYN，ACK标志位为1</p>
+</li>
+<li>
+<p>可以将上图的纵轴理解为时间线，TCP三次握手的过程需要时间消耗，每次报文的传输也需要时间消耗。</p>
+</li>
+<li>
+<p>三次握手并不是一定成功，只是较大概率成功，**TCP的可靠性是在三次握手建立连接完成之后才能保证的。**主要原因是第三次握手时，客户端发来的ACK报文可能丢包。</p>
+</li>
+<li>
+<p>客户端和服务端在三次握手的进行过程中，会有状态变化。比较值得关注的是，客户端在发送完第三次握手的ACK之后，进入ESTABLISED状态，而服务端接收到ACK才会认为连接建立完成。具有滞后性。</p>
+</li>
+<li>
+<blockquote>
+<p>简单点来说：
+第一次握手：客户端：在吗，我是XX，你听到我说话了吗？
+第二次握手：服务端：我听到你说话了，你听到我说话了吗？
+第三次握手：客户端：我也听到你说话了，既然我们互相都能听到，就开始通信吧。</p>
+</blockquote>
+</li>
+</ol>
+<h3 id="tcp断开连接的四次挥手">TCP断开连接的四次挥手</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/74a552d58a14457199bc82cb60a37dde.png"
+        data-srcset="https://img-blog.csdnimg.cn/74a552d58a14457199bc82cb60a37dde.png, https://img-blog.csdnimg.cn/74a552d58a14457199bc82cb60a37dde.png 1.5x, https://img-blog.csdnimg.cn/74a552d58a14457199bc82cb60a37dde.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/74a552d58a14457199bc82cb60a37dde.png"
+        title="img" /></p>
+<ol>
+<li>
+<p>主动断开连接的一方先发送FIN报文：FIN，ACK，FIN，ACK</p>
+</li>
+<li>
+<p>被动断开连接的一方可能将第二次挥手的ACK和第三次挥手的FIN合并为一个报文。四次挥手可能为三次挥手。</p>
+</li>
+<li>
+<p>四次挥手不一定顺利完成，比如第二次ACK丢失，最后一次ACK丢失。但是因为TCP有超时重传机制，所以整体来说不影响。</p>
+</li>
+<li>
+<blockquote>
+<p>简单来说
+第一次挥手：客户端：我要说的话已经说完了。(从此，客户端关闭写操作，不再发数据，但是可以收数据)
+第二次挥手：服务端：你要说的我都听到了，但是我的话还没说完。（从此，服务端关闭读操作）
+第三次挥手：服务端：我要说的话也说完了。（第三次挥手前，服务端要发的数据都发完了，关闭写操作，进行第三次挥手）
+第四次挥手：客户端：既然我们都说完了，那就结束通话吧。</p>
+</blockquote>
+</li>
+</ol>
+<h3 id="保活机制">保活机制</h3>
+<p>在TCP通信中，如果两端长时间没有数据往来（默认7200秒），则每隔一段时间（默认75秒），服务端就会向客户端发送一个保活探测数据报，让客户端进行回复，如果多次（默认9次）没有收到响应，则代表连接已经断开。</p>
+<p><strong>通过保活机制来确保如果有一端断开，另一端能够及时处理。</strong></p>
+<h3 id="三握四挥的状态变化">三握四挥的状态变化</h3>
+<h4 id="服务端状态转化">服务端状态转化:</h4>
+<p>三次握手:</p>
+<p>[CLOSED -&gt; LISTEN] 服务器端调用listen后进入LISTEN状态, 等待客户端连接;
+[LISTEN -&gt; SYN_RCVD] 一旦监听到连接请求(同步报文段SYN), 就将该连接放入内核等待队列中, 并向客户端 发送SYN确认报文.
+[SYN_RCVD -&gt; ESTABLISHED] 服务端一旦收到客户端的确认报文, 就进入ESTABLISHED状态, 可以进行 读写数据了.</p>
+<p>四次挥手:</p>
+<p>[ESTABLISHED -&gt; CLOSE_WAIT] 当客户端主动关闭连接(调用close), 服务器会收到结束报文段, 服务器返回确认报文段并进入CLOSE_WAIT;
+[CLOSE_WAIT -&gt; LAST_ACK] 进入CLOSE_WAIT后说明服务器准备关闭连接(需要处理完之前的数据); 当服务器真正调用close关闭连接时, 会向客户端发送FIN, 此时服务器进入LAST_ACK状态, 等待最后一个 ACK到来(这个ACK是客户端确认收到了FIN)
+[LAST_ACK -&gt; CLOSED] 服务器收到了对FIN的ACK, 彻底关闭连接.</p>
+<h4 id="客户端状态转化">客户端状态转化:</h4>
+<p>三次握手:</p>
+<p>[CLOSED -&gt; SYN_SENT] 客户端调用connect, 发送同步报文段;SYN
+[SYN_SENT -&gt; ESTABLISHED] connect调用成功（返回）, 则进入ESTABLISHED状态, 开始读写数据;</p>
+<p>四次挥手:</p>
+<p>[ESTABLISHED -&gt; FIN_WAIT_1] 客户端主动调用close时, 向服务器发送结束报文段, 同时进入 FIN_WAIT_1;
+[FIN_WAIT_1 -&gt; FIN_WAIT_2] 客户端收到服务器对结束报文段的确认, 则进入FIN_WAIT_2, 开始等待服务器的结束报文段FIN;
+[FIN_WAIT_2 -&gt; TIME_WAIT] 客户端收到服务器发来的结束报文段, 进入TIME_WAIT, 并发出LAST_ACK;
+[TIME_WAIT -&gt; CLOSED] 客户端要等待一个2MSL(Max Segment Life, 报文最大生存时间)的时间, 才会进入CLOSED状态.</p>
+<p>其中比较关键的两个状态是：</p>
+<ol>
+<li>
+<p>TCP被动关闭方收到对方的FIN，并发出ACK之后，在发出第三次挥手的FIN之前，会进入CLOSE_WAIT状态。</p>
+</li>
+<li>
+<p>主动关闭方在收到对方第三次挥手的FIN，并发出ACK之后，会进入一段TIME_WAIT状态，而不是直接进入CLOSED状态。</p>
+</li>
+</ol>
+<h3 id="问题补充">问题补充</h3>
+<p>两次不安全，四次没必要。SYN的目的是为了确认对方是否具有收发数据的能力，并且得到ACK回复后，则证明对方收到数据并且当前在线。如果要建立连接，就必须确保双方都具有收发数据的能力并且当前处于在线状态。</p>
+<p><strong>TCP三次握手为什么不能两次？</strong>
+如果只有两次就能建立连接，那就代表着客户端发起SYN连接，服务端确认后回复ACK+SYN就直接建立连接。</p>
+<ol>
+<li>
+<p>如果客户端连续发送多次请求，服务端就会建立多次连接，严重的浪费资源。</p>
+</li>
+<li>
+<p>如果客户端发起SYN请求后就断开，或者是因为延迟很久才发到，等服务端收到时客户端已经断开连接，这时这个连接是失败的，但是服务端还是创建了一个毫无意义的套接字，严重浪费了资源。</p>
+</li>
+<li>
+<p>验证全双工，验证通信信道。</p>
+</li>
+</ol>
+<p><strong>TCP三次握手为什么不能四次？</strong>
+四次握手完全没有必要，建立连接的SYN和确认回复的ACK报文是可以一起发送的，没有必要分开来增加操作。</p>
+<p><strong>TCP挥手为什么要四次，三次可以吗？</strong></p>
+<p>首先，因为断开连接是建立TCP连接双方的事情，需要双方都关闭此方到彼方的传输信道，故每一方都需要发送一次FIN报文。</p>
+<p>那么，第二次和第三次挥手可以合并吗？</p>
+<p>不行，发送FIN包只能代表着主动关闭方不再发送数据，但不代表着不再接受数据，所以被动关闭方在回复ACK后还是有可能继续发送数据，等到被动关闭方所有数据发送完后才会发送FIN，主动关闭方收到后回复ACK才会断开连接。这也就是为什么建立连接时ACK可以和SYN一起发送，而断开连接时FIN不能和ACK一起发送的原因。（如果被动关闭方不需要发送数据，则此时可以三次挥手）</p>
+<p><strong>TCP三次握手失败时，服务端如何处理？</strong>
+1.如果服务端没有收到SYN，则什么都不做（因为压根没有建立起来连接，出现情况可能是SYN丢失）
+2.服务端发送了SYN和ACK后，没有收到客户端的ACK，此时则说明客户端可能不在线，此时发送一个RST重置连接，并且释放已有资源。</p>
+<h3 id="四次挥手的close_wait状态">四次挥手的CLOSE_WAIT状态</h3>
+<p>大多情况下，TCP连接的断开，都是由客户端发起的。则若服务端在收到客户端的FIN并发出ACK之后，不发出FIN，则会一直进入CLOSE_WAIT状态。<strong>而发出第三次挥手的FIN，就需要服务端主动close关闭文件描述符。</strong></p>
+<p>故，服务端需要注意，当TCP通信结束后，需要close对应的文件描述符。<strong>否则，这个TCP连接将不会释放，时间长了，越来越多的TCP连接占用内存资源，会引发问题。同时，服务进程的文件描述符也会越来越少。</strong></p>
+<p>所以，若发现服务器有大量的close_wait状态的连接存在时，原因是什么呢？即应用层服务器写的有bug，忘记关闭对应的连接sockfd，导致四次挥手没有正确完成。</p>
+<h3 id="四次挥手的time_wait状态">四次挥手的TIME_WAIT状态</h3>
+<p>主动断开连接的一方，收到对方第三次挥手的FIN，且发出ACK之后，会进入TIME_WAIT状态，而不是直接进入CLOSED状态。经验证，确实是！</p>
+<p><strong>在此状态下，虽然应用程序终止了，但TCP协议层的TCP连接并没有完全断开，地址信息ip,port依旧是被占用的。</strong>
+故，有一个现象：当服务端直接ctrl+c之后，因为文件描述符表的生命周期随进程！故，进程终止，相当于所有文件描述符被关闭，相当于服务端主动进行四次挥手断开连接。故TCP协议层的连接此时会进入TIME_WAIT状态，故此时ip,port是被占用的，故此时若立刻再次启动服务进程，会显示bind失败。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/e577d2eb2e3b4a0e983bf975af8966a7.png"
+        data-srcset="https://img-blog.csdnimg.cn/e577d2eb2e3b4a0e983bf975af8966a7.png, https://img-blog.csdnimg.cn/e577d2eb2e3b4a0e983bf975af8966a7.png 1.5x, https://img-blog.csdnimg.cn/e577d2eb2e3b4a0e983bf975af8966a7.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/e577d2eb2e3b4a0e983bf975af8966a7.png"
+        title="img" /></p>
+<ol>
+<li>TCP协议规定,主动关闭连接的一方要处于TIME_ WAIT状态,等待两个MSL(maximum segment lifetime) 的时间后才能进入到CLOSED状态;</li>
+<li>我们使用Ctrl-C终止了server, 所以server是主动关闭连接的一方, 在TIME_WAIT期间仍然不能再次监听同样的server端口;</li>
+<li>MSL在RFC1122中规定为两分钟,但是各操作系统的实现不同, 在Centos7上默认配置的值是60s;</li>
+</ol>
+<h4 id="为什么要有time_wait状态且还是2msl">为什么要有TIME_WAIT状态？（且还是2MSL）</h4>
+<ol>
+<li>MSL是TCP报文的最大生存时间, 因此TIME_WAIT持续存在2MSL的话, 就能保证在两个传输方向上的尚未被接收或迟到的报文段都已经消失(否则服务器立刻重启, 可能会收到来自上一个进程的迟到的数据, 但是这种数据很可能是错误的);</li>
+<li>保证最后一个ACK成功传输给对端。（若传输失败，则对端可能会进行超时重传，重新传来一个FIN，这时虽然客户端不存在了，但是TCP连接还在，仍然可以重发LAST_ACK;</li>
+</ol>
+<h4 id="解决time_wait状态引起的bind失败的方法">解决TIME_WAIT状态引起的bind失败的方法</h4>
+<p>在server的TCP连接没有完全断开之前不允许重新监听, 某些情况下可能是不合理的。</p>
+<blockquote>
+<p>服务器需要处理非常大量的客户端的连接(每个连接的生存时间可能很短, 但是每秒都有很大数量的客户端来请求).</p>
+<p>这个时候如果由服务器端主动关闭连接(比如某些客户端不活跃, 就需要被服务器端主动清理掉), 就会产生大量TIME_WAIT连接.</p>
+<p>由于我们的请求量很大, 就可能导致TIME_WAIT的连接数很多, 每个连接都会占用一个通信五元组(源ip,  源端口, 目的ip, 目的端口, 协议). 其中服务器的ip和端口和协议是固定的. 如果新来的客户端连接的ip和端口号和TIME_WAIT占用的链接重复了,就会出现问题。</p>
+</blockquote>
+<p>int opt = 1; setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &amp;opt, sizeof(opt));  进行setsockopt即可让端口号和ip在TIME_WAIT期间，依旧被服务器再次绑定。</p>
+<h2 id="可靠传输">可靠传输</h2>
+<p><strong>TCP与UDP不一样，他能够确保数据安全有序的到达对端。</strong>
+通过以下方式</p>
+<ol>
+<li>面向连接</li>
+<li>确认应答机制（确保对端是否收到数据，并且根据序号使数据有序）</li>
+<li>超时重传机制（确保数据丢失后能够重传）</li>
+<li>流量控制机制</li>
+<li>拥塞控制机制</li>
+<li>TCP首部报文中的序号和确认序号（确保数据有序）</li>
+<li>TCP首部报文中的校验和(确保收发数据一致，不一致则要求重传)</li>
+</ol>
+<h3 id="确认应答ack机制">确认应答（ACK）机制</h3>
+<blockquote>
+<p>TCP和UDP一个最大的不同就是，TCP具有可靠性，而可靠性就需要TCP采取一些机制和策略措施来实现，其中最重要的就是确认应答（ACK）机制。</p>
+</blockquote>
+<blockquote>
+<p>为什么网络传输存在不可靠性呢？（这里的不可靠，比如数据在传输过程中丢失了，丢包了。）其实，单纯只是因为传输距离变长了，比如在操作系统内部，也就是一个机器中，也需要近距离通过电路传输数据，但是因为这里距离近，所以不存在协议。而一旦进行网络传输，也就是主机与主机之间，距离变长了，就需要一些协议，比如TCP/IP协议。
+不存在100%可靠的协议，比如A主机向B主机发送一个数据，没有哪个协议能够保证这个数据一定送达。但是TCP的确认应答（ACK）机制，能够保证在局部上数据传输的100%可靠性。</p>
+</blockquote>
+<p><strong>TCP协议的确认应答机制：当A向B发送一条消息，我们无法保证，最新传输的这条消息的可靠性，但是如果B就这条消息，给A一个ACK（一个确认应答），则A一定可以保证B收到了这条消息。</strong></p>
+<blockquote>
+<p>（注：我不确定发送缓冲区中是否包含TCP首部）TCP将发送缓冲区中的每个字节的数据都进行了编号，发送TCP报文时，TCP首部中的32位序号字段应该填写这个报文的数据部分（有效载荷）的第一个字节的序号。比如这个报文的32序号为1，包含1000字节的数据，则接收方接收到之后，返回ACK时，需要将32位确认序号字段写为1001，意思是告诉发送者, 我已经收到了哪些数据（1~1000字节的数据）; 下一次你从哪里开始发（1001字节开始发），同时接收方返回的报文的ACK标志位应置为1（代表着32位确认序号有效）</p>
+</blockquote>
+<p>TCP在首部中给每一个发送的数据都设置了序号和确认序号。
+通过序号和确认序号，发送方告诉了接收方我发送的数据的序号，以及数据的长度。而接收方则回复发送方，我已经收到了哪些数据，你下一次应该从哪一个位置开始发送。</p>
+<p><strong>seq</strong>:<strong>本条数据的起始序号。为上一条数据的ack</strong>
+<strong>ack</strong>:对对方发送数据的确认序号，告诉对方这个位置之前的所有数据已收到。<strong>确认序号为本条数据的起始序号加上数据长度。也就是上一条的seq + len</strong>
+<strong>len</strong>:<strong>本条数据的长度。</strong></p>
+<img src="https://img-blog.csdnimg.cn/20200623222134781.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:67%;" />
+<img src="https://img-blog.csdnimg.cn/20200623223520911.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:67%;" />
+<p>如果在传输过程中，前面的某一个数据丢失，即使这里的1025-2048和2049-3072已经到达，但是这些数据的依旧无法确认回复</p>
+<p><strong>因为确认回复必须要保证确认序号ack前的所有数据都要到达</strong>。<strong>这么做的目的是为了防止因为确认回复ACK的丢失导致的重传。（见下方的作用）</strong></p>
+<img src="https://img-blog.csdnimg.cn/202006232240121.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:67%;" />
+<p>即使是因为丢包或者延迟而导致前面的数据晚到或重传，等到接收到重传的数据后，再一个个对之前发送的数据进行确认应答，并通过序号在接受缓冲区中进行排序。</p>
+<hr>
+<p>确认序号的含义是：表示确认序号对应的数字，之前的所有数据报文已经全部都收到了。告知发送方下次从确认序号指明的序号开始发送。
+比如，接收方发送ACK为1001，2001，3001三个ACK报文，此时若1001和2001ACK丢失了，3001ACK接收方接收到了，这种情况并不影响，因为根据确认序号的含义，表示之前的包含1-3000的数据的三个报文，接收方都收到了。</p>
+<p><strong>序号和确认序号的作用：</strong></p>
+<ol>
+<li>将请求和应答一一对应。（接受方知道哪个ACK对应哪个之前发送过的数据报文）</li>
+<li>允许部分ACK丢失或者不给应答。因为确认序号的含义是确认序号之前的所有数据都收到了。</li>
+<li>接收方可以根据序号，将接收到的报文进行排序，解决报文乱序问题。</li>
+<li>接收方可以根据TCP协议报头中的序列号，很容易进行去重。（超时重传ACK丢失）</li>
+</ol>
+<p>一个报文中设置序号和确认序号两个字段是因为，TCP是全双工的，任何一方在发送ACK确认的时候，也可能同时想向对方发送数据消息。既可以收，也可以发。（只需要填写确认序号字段，且将ACK标志位置为1即可）</p>
+<h3 id="超时重传">超时重传</h3>
+<blockquote>
+<p>超时重传机制是TCP协议保证可靠性的一个关键因素。个人认为，确保TCP协议可靠性最关键的就是两个，一个是确认应答ACK机制，另一个就是超时重传机制。有了这两个机制，几乎就可以保证数据可靠地传输给对方。</p>
+</blockquote>
+<p>超时重传机制：在确认应答机制的前提下，当A向B发送报文，收到对应的ACK后，可以确保报文传达给了B。<strong>而当A在一定时间内没有收到B的ACK时，则判定为出问题了，则A重新给B发送报文。</strong></p>
+<p>可能的情况：</p>
+<ol>
+<li>主机A发送数据给B之后, 可能因为网络拥堵等原因, 数据报无法到达主机B，丢包了。</li>
+<li>报文没有丢包，B发送的ACK丢失了。</li>
+</ol>
+<p>则不论情况一还是情况二，A都需要在一定时间没有收到ACK之后，重新发送报文。但如果是情况二，则主机B会收到很多重复数据（报文），则TCP协议就需要能够识别出哪些包是重复的包，并将重复的丢弃掉。<strong>接收方可以根据TCP协议报头中的序列号，很容易进行去重。</strong></p>
+<p><strong>超时的时间如何确定？</strong></p>
+<ol>
+<li>这个时间长短，随着网络环境的不同，是有差异的。网络环境好，则时间应相对短一些，网络环境差，则时间应相对长一些。</li>
+<li>如果时间设得太长，会影响整体的重传效率。如果时间设的太短，有可能会频繁发送重复的包。也会影响整体传输效率。</li>
+<li><strong>TCP为了保证无论在任何环境下都能比较高性能地通信, 因此会动态计算这个最大超时时间</strong>. Linux中(BSD Unix和Windows也是如此), 超时以500ms为一个单位进行控制, 每次判定超时重发的超时时间都是500ms的整数倍. 如果重发一次之后, 仍然得不到应答, 等待 2*500ms 后再进行重传. 如果仍然得不到应答, 等待 4*500ms 进行重传. 依次类推, 以指数形式递增. 累计到一定的重传次数, TCP认为网络或者对端主机出现异常, 强制关闭连接.</li>
+</ol>
+<h2 id="避免丢包重传">避免丢包重传</h2>
+<p>也可以理解为可靠性吧~</p>
+<h3 id="流量控制16位窗口大小">流量控制（16位窗口大小）</h3>
+<p>接收端处理数据的速度是有限的. 如果发送端发的太快, 导致接收端的缓冲区被打满, 这个时候如果发送端继续发送, 就会造成丢包, 继而引起丢包重传等等一系列连锁反应.</p>
+<p><strong>因此TCP支持根据接收端的处理能力（其实就是接收端的接收缓冲区的剩余空间大小）, 来决定发送端的发送速度. 这个机制就叫做流量控制(Flow Control);</strong></p>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813163926582.png" alt="image-20230813163926582" style="zoom:67%;" />
+<ol>
+<li>
+<p>接收端将自己可以接收的剩余接收缓冲区空间大小放入TCP首部中的 &ldquo;窗口大小&rdquo; 字段, 通过ACK报文通知发送端;（因为接收端需要给发送端发送的报文进行ACK）</p>
+</li>
+<li>
+<p>窗口大小字段越大, 说明网络的吞吐量越高;</p>
+</li>
+<li>
+<p>接收端一旦发现自己的缓冲区快满了, 就会将窗口大小设置成一个更小的值通知给发送端; 发送端接受到这个更小的窗口大小值之后, 就会减慢自己的发送速度;</p>
+</li>
+<li>
+<p>如果接收端缓冲区满了, 就会将窗口置为0; 这时发送方不再发送数据, 但是需要定期发送一个窗口探测数据段（可以理解为不携带有效载荷的报文）, 使接收端把窗口大小告诉发送端。</p>
+</li>
+<li>
+<p>TCP首部中的16位窗口大小字段，就是存放了窗口大小信息。16位最大表示65535字节。实际上，TCP首部40字节选项（最大40字节）中还包含了一个窗口扩大因子M, 实际窗口大小是窗口字段的值左移 M 位;</p>
+</li>
+<li>
+<p>当接收端的ACK报文窗口大小总是很小或总是为0时，发送端发送的报文中可以将PSH标志位置为1，表示督促对方尽快将接收缓冲区中的数据向上交付。</p>
+</li>
+<li>
+<p>流量控制是TCP连接双方的，因为TCP协议的每一方都有一个发送缓冲区和一个接收缓冲区。</p>
+</li>
+<li>
+<p>在TCP连接双方第一次进行携带有有效载荷的报文进行通信时，如何得知对方的窗口大小？其实，第一次数据通信 不等于 第一次交换报文。在TCP三次握手时，需要传输报文，这时就可以填写窗口大小字段，交换双方的接收缓冲区剩余空间大小。</p>
+</li>
+</ol>
+<h3 id="拥塞控制">拥塞控制</h3>
+<p>丢包问题可能分为两种，1. 少量丢包，则超时重传 / 快重传 2. <strong>大量丢包，则可能是因为此时网络拥塞，则此时不该采取重传策略，而是先给网络缓冲的机会。</strong>（注意，网络中的TCP/IP连接是很多的！！！）</p>
+<p><strong>对于这种避免网络拥塞，以及网络拥塞之后的应对策略等，称为拥塞控制。</strong></p>
+<ol>
+<li>拥塞窗口：单机主机一次向网络中发送大量的数据时，可能会引发网络拥塞的上限值。</li>
+<li>滑动窗口大小 = min(拥塞窗口大小，对端的窗口大小(接收能力))（其实就是考虑对方接收能力，还要考虑网络拥塞情况）</li>
+<li>在TCP连接刚建立好时，如果在刚开始阶段就发送大量的数据, 仍然可能引发问题，因为此时网络状况并不清楚，因此TCP引入 慢启动 机制，先发少量数据，探探路，摸清当先的网络拥堵状况，再逐渐增大数据传输速度。<strong>慢启动机制除了在TCP刚建立好时使用，还有每一次发生网络拥塞之后。</strong></li>
+<li>承接第四点，慢启动：拥塞窗口为1（刚建立好 &amp;&amp; 网络拥塞之后），后面若正常收到ACK应答，则拥塞窗口先以指数方式增长。到了一定阈值之后，再线性增长。（拥塞避免）</li>
+</ol>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/a14560ce44e54825b6cf112dcb8b33e2.png"
+        data-srcset="https://img-blog.csdnimg.cn/a14560ce44e54825b6cf112dcb8b33e2.png, https://img-blog.csdnimg.cn/a14560ce44e54825b6cf112dcb8b33e2.png 1.5x, https://img-blog.csdnimg.cn/a14560ce44e54825b6cf112dcb8b33e2.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/a14560ce44e54825b6cf112dcb8b33e2.png"
+        title="img" /></p>
+<ol>
+<li>&ldquo;慢启动&rdquo; 只是指初始时慢, 但是增长速度非常快（因为是指数增长）.</li>
+<li>不能一直指数增长, 故引入一个拥塞窗口的阈值，超过阈值之后线性增长&hellip;.</li>
+<li>为什么网络拥塞之后，前期是指数增长？指数：前期较慢，后期增长较快。a. 前期给网络一个缓冲的机会 - 慢 b. 中后期，网络恢复之后，需要尽快恢复通信的效率 - 快。  （而因为不能一味的指数增长，所以有了后面的阈值）(阈值细节看kj)</li>
+<li>即<strong>慢启动 + 快恢复</strong></li>
+</ol>
+<p>拥塞控制, 归根结底是TCP协议想尽可能快的把数据传输给对方, 但是又要避免给网络造成太大压力的折中方案.</p>
+<h2 id="挽救传输性能">挽救传输性能</h2>
+<h3 id="滑动窗口">滑动窗口</h3>
+<p><strong>因为有了确认应答机制，于是对于每一个发出的数据报文，都需要一个ACK确认应答。收到ACK之后再发送下一个数据段。但这样做会导致TCP网络通信性能较差，尤其是数据往返的时间较长时。</strong></p>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813164717704.png" alt="image-20230813164717704" style="zoom: 50%;" />
+<p><strong>既然这样一发一收的方式性能较低, 那么我们一次发送多条数据, 就可以大大的提高性能(其实是将多个段的等待时间重叠在一起了).</strong>
+<strong>滑动窗口策略就是用来提高TCP传输效率的。</strong></p>
+<p>在TCP首部中我们看到有一个窗口大小的字段，那个就是滑动窗口的大小，其限制了发送方最多发送多少数据。同时还有MSS（最大数据段大小，选取两边最小的一个MSS作为最大数据段大小），在三次握手的时候双方进行协商，规定好通信时的MSS和窗口大小。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/81d86be9760e4bcf89615cbfab7c7d4e.png"
+        data-srcset="https://img-blog.csdnimg.cn/81d86be9760e4bcf89615cbfab7c7d4e.png, https://img-blog.csdnimg.cn/81d86be9760e4bcf89615cbfab7c7d4e.png 1.5x, https://img-blog.csdnimg.cn/81d86be9760e4bcf89615cbfab7c7d4e.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/81d86be9760e4bcf89615cbfab7c7d4e.png"
+        title="img" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/d3ac3d6308974211b64683e85e4827a1.png"
+        data-srcset="https://img-blog.csdnimg.cn/d3ac3d6308974211b64683e85e4827a1.png, https://img-blog.csdnimg.cn/d3ac3d6308974211b64683e85e4827a1.png 1.5x, https://img-blog.csdnimg.cn/d3ac3d6308974211b64683e85e4827a1.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/d3ac3d6308974211b64683e85e4827a1.png"
+        title="img" /></p>
+<p>结合上面的两个图（并不对应）</p>
+<ol>
+<li>
+<p>滑动窗口的窗口大小指的是无需等待确认应答就可以继续发送数据的最大值.上图中的窗口大小即为4000字节。（TCP面向字节流，这4000字节被分为几个报文进行发送不确定，上图中为4个）</p>
+</li>
+<li>
+<p>发送前四个段时，不需要等待任何ACK，可以直接发送。</p>
+</li>
+<li>
+<p>收到第一个ACK后，滑动窗口向右滑动。继续发送第五个段的数据；以此类推。</p>
+</li>
+<li>
+<p>窗口越大，表示网络的吞吐率越高（传输效率越高）操作系统内核为了维护这个滑动窗口, 需要开辟 发送缓冲区 来记录当前还有哪些数据没有应答; 只有确 认应答过的数据, 才能从缓冲区删掉;</p>
+</li>
+<li>
+<p>如图一所示，发送缓冲区中的数据可以大致分为三个部分，已发送并收到ACK确认的数据，已发送但未收到ACK确认的数据，未发送的数据。其中，窗口包括第二部分，可能包括未发送数据的某一部分，也就是，已发送但未收到ACK的数据，收到ACK之后，窗口会右移（后移），此时窗口可能包括未发送的数据的一部分，也就是不需要等待前方报文的ACK就可以立即发送了，但尚未发送。</p>
+</li>
+<li>
+<p>滑动窗口的发送策略，其实并不是完全按照一批一批发送的，也就是，图二中，若收到了1001的ACK，则窗口会右移，此时，4001-5000的数据报文就可以立即发送了。</p>
+</li>
+<li>
+<p>滑动窗口在发送缓冲区内，属于发送方的发送缓冲区的一部分（如第五点所示），滑动窗口的本质：发送方，可以一次性向对方发送数据的最大值（滑动窗口，提高效率的一个策略）。滑动窗口的大小 = 接收方窗口大小（接收缓冲区剩余空间） 和 拥塞窗口（见下文）的较小值。</p>
+</li>
+<li>
+<p>滑动窗口模型理解：可以将发送缓冲区理解为一个字节数组，每一个字节都有下标。滑动窗口有两个下标:win_start, win_end。win_end = win_start + min(窗口大小（不是滑动窗口大小），拥塞窗口大小），若收到ACK，则win_start = ACK的确认序号，win_end = win_start + min(窗口大小，拥塞窗口大小)。故，滑动窗口的本质就是指针或者下标。</p>
+</li>
+<li>
+<p>滑动窗口不一定必须向右移动，比如收到ACK且min(x, y)减小，则可能不会右移。滑动窗口可能为0，比如对方窗口大小 == 0 或者 拥塞窗口大小 == 0。中间发送的某些报文的ACK丢失，可能，但是不影响。因为ACK的确认序号的含义是该序号前的数据都收到了。滑动窗口一直右移，可能越界吗？不可能，因为发送缓冲区的物理上是线性的，逻辑上是环形的。</p>
+</li>
+</ol>
+<h3 id="快重传">快重传</h3>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/e696e0b1d914425c99546abbc72441c7.png"
+        data-srcset="https://img-blog.csdnimg.cn/e696e0b1d914425c99546abbc72441c7.png, https://img-blog.csdnimg.cn/e696e0b1d914425c99546abbc72441c7.png 1.5x, https://img-blog.csdnimg.cn/e696e0b1d914425c99546abbc72441c7.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/e696e0b1d914425c99546abbc72441c7.png"
+        title="img" /></p>
+<p>之前说了丢包问题的一种可能，即中间或者开头的报文的ACK丢失，但是根据确认序号的含义，所以不影响。另一种可能为开头的报文丢失，则后面收到的所有ACK的确认序号都会为1001。就像是在提醒发送端 &ldquo;我想要的是 1001&rdquo;  一样;
+如果发送端主机连续三次收到了同样一个 &ldquo;1001&rdquo; 这样的应答, 就会将对应的数据 1001 - 2000 重新发送;
+这个时候接收端收到了 1001 之后, 再次返回的ACK就是7001了(因为2001 - 7000)接收端其实之前就已经收到了, 被放到了接收端操作系统内核的接收缓冲区中;</p>
+<p>这样的方法比之前的超时重传要快，因为发送三次ACK的时间比起等待超时要少了很多，所以这种机制也被称为快速重传机制。</p>
+<p>这种机制被称为 &ldquo;高速重发控制&rdquo;(也叫 &ldquo;快重传&rdquo;).    （快重传与超时重传是协作关系）</p>
+<h3 id="延迟应答">延迟应答</h3>
+<p><strong>如果接收数据的主机立刻返回ACK应答, 这时候返回的窗口可能比较小.</strong></p>
+<p><strong>延迟应答保证网络不拥塞的情况下尽量提高传输效率</strong></p>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813181700640.png" alt="image-20230813181700640" style="zoom:67%;" />
+<p>有了滑动窗口之后，往往接收方接收缓冲区剩余空间大小，也就是接收能力会较大地影响TCP传输效率。那么当接收方接收到数据后，若立刻进行ACK，则此时窗口大小是比较小的。若接收方可以延迟一些时间再应答，给应用层一定时间，将接收缓冲区中的数据读取走，则会给发送方一个较大的窗口大小。窗口越大，网络吞吐量越大，传输效率越高。我们的目标是在网络不拥塞的情况下尽量提高传输效率。</p>
+<blockquote>
+<p>假设接收端缓冲区为1M. 一次收到了500K的数据; 如果立刻应答, 返回的窗口就是500K;  但实际上可能处理端处理的速度很快, 10ms之内就把500K数据从缓冲区消费掉了; 在这种情况下, 接收端处理还远没有达到自己的极限, 即使窗口再放大一些, 也能处理过来; 如果接收端稍微等一会再应答, 比如等待200ms再应答, 那么这个时候返回的窗口大小就是1M;</p>
+</blockquote>
+<p>也不是所有的包都可以延迟应答，比如，数量限制：每隔N个包就应答一次。时间限制：超过最大延迟时间就应答一次。具体的数量和超时时间, 依操作系统不同也有差异; 一般N取2, 超时时间取200ms;（肯定也不能太长，否则会触发超时重传）</p>
+<h3 id="捎带应答">捎带应答</h3>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813181947374.png" alt="image-20230813181947374" style="zoom:67%;" />
+<p>一种提高TCP传输效率的机制</p>
+<p><strong>在即将要发送的数据头部中加上上一条接收到的数据的ACK</strong>。</p>
+<p>在延迟应答的基础下，还有确认应答ACK机制。往往并不是只有一方向另一方发送数据。而是双方互发数据。所以有时候，ACK可以和&quot;接收方&quot;想向&quot;发送方&quot;发送的数据报文合并，一起回给发送方。</p>
+<h2 id="tcp面向字节流">TCP面向字节流</h2>
+<p>对于TCP来说，每当创建一个socket的时候，就会同时在内核中创建一个接收缓冲区和发送缓冲区。</p>
+<p><strong>接收</strong>：对于接收到的数据，并非像UDP一样一条一条往上交付，而是先将接收到的数据放入缓冲区，再根据上层所需要的长度，从接收缓冲区中取出相应的数据交付。
+<strong>发送</strong>：对于发送的数据并不会直接发送，而是先存入发送缓冲区。如果数据过大，则会被拆分成多个TCP数据包发送。而如果数据过小，则会在发送缓冲区中等待，直到大小合适后再从发送缓冲区中取出数据发送。</p>
+<p><strong>优点</strong>：<strong>这种传输方式比较灵活</strong>，对于多个小数据，会合并为一条大的数据一次性发送过去，<strong>这样就大大的减少了IO的次数</strong>。<strong>接收方也更加灵活，他可以任意取出想要的数据</strong>，不会像UDP一样必须交付一条完整的报文。
+<strong>缺点</strong>：因为数据会在缓冲区中进行合并或者拆分，这就导致了数据直接的边界无法控制，<strong>所以TCP交付的这条数据可能并非一条完整的数据，而是半条或者多条数据</strong>，所以可能会导致上层会将多条数据按照一条来处理。这也就是TCP粘包问题。</p>
+<h2 id="tcp粘包问题">TCP粘包问题</h2>
+<p>即TCP可能将多条数据按照一条处理（UDP不会有这种问题，UDP在首部中定义了数据报长度，确保每次只交付一条完整的数据）</p>
+<p><strong>解决方案</strong>：<strong>需要我们自己进行边界的管理。</strong></p>
+<ol>
+<li>每条数据之间以特殊字符进行间隔（如果数据中有该字符可能要转义处理）</li>
+<li>数据定长传输，不够则补位（数据如果过短，则会传递大量无用的补位数据）</li>
+<li>应用层协议头部定义数据长度（这里可以参考http协议和udp协议的做法）</li>
+</ol>
+<p>http: 头部以\r\n\r\n表示结束（空行间隔头部和正文），并且在头部的Content-Length确定正文长度。
+udp: 传输层就解决了，在头部中就已经定义数据报长度。</p>
+<p>针对TCP面向字节流-粘包问题的自定义应用层协议的网络版本计算器server&amp;&amp;client
+<a href="http://t.csdn.cn/uMEuP" target="_blank" rel="noopener noreffer ">http://t.csdn.cn/uMEuP</a></p>
+<h2 id="tcp异常情况你的呢">TCP异常情况（你的呢</h2>
+<p>进程终止: 进程终止会释放文件描述符, 仍然可以发送FIN. 和正常关闭没有什么区别.</p>
+<p>机器重启: 和进程终止的情况相同.</p>
+<p>机器掉电/网线断开: 接收端认为连接还在, 一旦接收端有写入操作, 接收端发现连接已经不在了, 就会进行reset. 即使没有写入操作, TCP自己也内置了一个保活定时器, 会定期询问对方是否还在. 如果对方不在, 也会把连接释放.</p>
+<p>另外, 应用层的某些协议, 也有一些这样的检测机制. 例如HTTP长连接中, 也会定期检测对方的状态. 例如QQ, 在QQ断线之后, 也会定期尝试重新连接.</p>
+<h2 id="基于tcp应用层协议">基于TCP应用层协议</h2>
+<p>HTTP HTTPS SSH Telnet FTP SMTP</p>
+<p>当然, 也包括你自己写TCP程序时自定义的应用层协议;</p>
+<h2 id="tcpudp对比">TCP/UDP对比</h2>
+<p>之前说过（好像说过），<strong>TCP的可靠和UDP的不可靠是一个中性词</strong>，没有优劣之分，这只是它们的特点。因为可靠，一定意味着复杂，不可靠就意味着简单。</p>
+<p>而也不是说TCP的传输效率就一定低于UDP，因为TCP有很多提高传输效率的策略和机制，比如，滑动窗口，快重传，延迟应答，捎带应答等。</p>
+<p>总的来说</p>
+<ul>
+<li>
+<p><strong>TCP</strong>用于<strong>可靠传输</strong>的情况, 应用于文件传输, 重要状态更新等场景。</p>
+</li>
+<li>
+<p><strong>UDP</strong>用于对<strong>高速传输和实时性要求较高</strong>的通信领域, 例如, 早期的QQ, 视频传输等. 另外<strong>UDP可以用于广播</strong>。</p>
+</li>
+</ul>
+<p>具体TCP和UDP什么时机用，怎么用，还要根据具体的需求场景去判定。</p>
+<h2 id="listen的第二个参数">listen的第二个参数</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C++" data-lang="C++"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/socket.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;arpa/inet.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;netinet/in.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;Sock.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Sock</span> <span class="n">sock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">listen_sock</span> <span class="o">=</span> <span class="n">sock</span><span class="p">.</span><span class="n">Socket</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sock</span><span class="p">.</span><span class="n">Bind</span><span class="p">(</span><span class="n">listen_sock</span><span class="p">,</span> <span class="mi">8080</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sock</span><span class="p">.</span><span class="n">Listen</span><span class="p">(</span><span class="n">listen_sock</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">ip</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">uint16_t</span> <span class="n">port</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sock</span><span class="p">.</span><span class="n">Accept</span><span class="p">(</span><span class="n">listen_sock</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">port</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ip</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Linux内核协议栈为一个tcp连接管理维护两个队列：</p>
+<ul>
+<li>半连接队列，被称为SYN队列（用来保存处于SYN_SENT和SYN_RECV状态的请求）</li>
+<li>全连接队列，被称为accept队列（用来保存处于established状态，但是应用层没有调用accept取走的请求）</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/d7a7a20eca6441efa9ac6a90602f28d0.png"
+        data-srcset="https://img-blog.csdnimg.cn/d7a7a20eca6441efa9ac6a90602f28d0.png, https://img-blog.csdnimg.cn/d7a7a20eca6441efa9ac6a90602f28d0.png 1.5x, https://img-blog.csdnimg.cn/d7a7a20eca6441efa9ac6a90602f28d0.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/d7a7a20eca6441efa9ac6a90602f28d0.png"
+        title="img" /></p>
+<p><strong>在服务端进行listen调用后，此时这个服务端就已经可以和客户端建立TCP连接了，即三次握手的过程。</strong>
+三次握手并非必须在服务端调用accept才能完成，服务端调用accept只是获取已经建立好的TCP连接，这些连接在OS内核TCP层维护的全连接队列中。</p>
+<h4 id="tcp全连接队列的意义">TCP全连接队列的意义</h4>
+<p>而如果同一时刻或者较短时间内大量客户端发起连接，此时服务端可能来不及提供服务（如创建新线程提供服务），此时就需要先进行连接，然后将此连接保存起来，之后服务端再提供对应服务。（联想海底捞门口的等待队列）。</p>
+<p><strong>全连接队列的长度 = listen第二个参数+1</strong></p>
+<p>1、客户端发送SYN包，并进入SYN_SENT状态
+2、服务端接收到数据包将相关信息放入半连接队列（SYN 队列）,并返回SYC+ACK包给客户端。
+3、客户端返回ACK进行第三次握手，服务端接收客户端ACK数据包，这时如果全连接队列（accept 队列）没满，就会从半连接队列里面将对应连接数据取出来放入全连接队列，等待应用使用，当队列已满就会跟据tcp_abort_on_overflow配置执行策略。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/d25dd17b376d47339786a413593a3bfc.png"
+        data-srcset="https://img-blog.csdnimg.cn/d25dd17b376d47339786a413593a3bfc.png, https://img-blog.csdnimg.cn/d25dd17b376d47339786a413593a3bfc.png 1.5x, https://img-blog.csdnimg.cn/d25dd17b376d47339786a413593a3bfc.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/d25dd17b376d47339786a413593a3bfc.png"
+        title="img" /></p>
+<p>上图为，当listen的backlog(第二个参数)为3时，建立了四个TCP连接（三次握手完成，ESTABLISHED状态），此时再发起一个连接，会处于SYN_RECV状态，不会完成三次握手连接。 且这个连接一段时间后就会被自动终止</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/7e215e9706d74ca79ea6c3341bcfd45e.png"
+        data-srcset="https://img-blog.csdnimg.cn/7e215e9706d74ca79ea6c3341bcfd45e.png, https://img-blog.csdnimg.cn/7e215e9706d74ca79ea6c3341bcfd45e.png 1.5x, https://img-blog.csdnimg.cn/7e215e9706d74ca79ea6c3341bcfd45e.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/7e215e9706d74ca79ea6c3341bcfd45e.png"
+        title="img" /></p>
+<p>**经过实验证实，服务端调用accept，会获取存储在全连接队列中的TCP连接，并将其移除全连接队列中。**上图为当backlog == 3时，建立了6个TCP连接。</p>
+<h2 id="使用-wireshark-分析-tcp-通信流程">使用 wireshark 分析 TCP 通信流程</h2>
+<h2 id="各种版本的基于tcp协议的cs">各种版本的基于TCP协议的cs</h2>
+<p>client的短连接版对应server的线程池版。client的长连接版对应server的多进程，多线程版。</p>
+<img src="https://img-blog.csdnimg.cn/de5c1988e05042fb8a133d5b86e0a466.png" alt="img" style="zoom: 67%;" />
+<p>上图为多进程2.0版本中，若server创建子进程之后，不进行close文件描述符，则会有大量CLOSE_WAIT状态连接存在。</p>
+<img src="https://img-blog.csdnimg.cn/a6ca2d169eeb4c37a9f6e3a7242114fc.png" alt="img" style="zoom: 67%;" />
+<p>上图为线程池版本中，每一次客户端都是以短连接的方式与服务端进行TCP连接。大概就是，先建立TCP连接，客户端send，服务端recv，进行业务处理，send结果，close文件描述符，客户端recv，打印输出，close文件描述符。但是因为往往是服务端先进行close，所以会有大量TIME_WAIT连接存在。而因为客户端端口号是由OS随机分配的，所以图中Foreign Address中的端口号都不一样。</p>
+<p>线程池版本中，若服务端每次不关闭短连接的文件描述符，则会发现，存在很多CLOSE_WAIT状态连接，而因为server和client都是在一个主机上运行的，所以同时会发现还有很多FIN_WAIT2状态的TCP连接，就是因为主动断开TCP连接的一方没有收到对方的第三次FIN挥手。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux%E7%BD%91%E7%BB%9C4-%E7%BD%91%E7%BB%9C%E5%B1%82ip/" class="prev" rel="prev" title=""><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i></a>
+            <a href="/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">PTE</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"valine":{"appId":"cIRpq8figzQxyGz5LyAdUahJ-gzGzoHsz","appKey":"T9YWfgGhznKaXXx7TCLxzS3C","avatar":"robohash","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":true,"highlight":true,"lang":true,"meta":true,"pageSize":true,"placeholder":"说点什么吧...","recordIP":true,"visitor":true}},"data":{"id-1":"PTE","id-2":"PTE"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.zh-cn","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

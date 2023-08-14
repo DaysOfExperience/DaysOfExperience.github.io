@@ -1,7 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Tags - Tag - My New Hugo Site</title>
-        <link>http://example.org/tags/</link>
-        <description>Tags - Tag - My New Hugo Site</description>
-        <generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="http://example.org/tags/" rel="self" type="application/rss+xml" /></channel>
+        <title>Tags - 标签 - PTE</title>
+        <link>https://luckly.work/tags/</link>
+        <description>Tags - 标签 - PTE</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>1149367636@qq.com (PTE)</managingEditor>
+            <webMaster>1149367636@qq.com (PTE)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="https://luckly.work/tags/" rel="self" type="application/rss+xml" /></channel>
 </rss>

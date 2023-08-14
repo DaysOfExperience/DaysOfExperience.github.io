@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - PTE</title><meta name="Description" content="PTE"><meta property="og:title" content="" />
+<meta property="og:description" content="数据链路层VS网络层 IP：根据目的IP地址，在复杂的网络环境中确定一个合适的IP数据包传输路径。 而主机B到路由器F，F到G，G到H等等的局域" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://luckly.work/linux%E7%BD%91%E7%BB%9C5-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/" /><meta property="og:image" content="https://luckly.work/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://luckly.work/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="数据链路层VS网络层 IP：根据目的IP地址，在复杂的网络环境中确定一个合适的IP数据包传输路径。 而主机B到路由器F，F到G，G到H等等的局域"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C5-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/" /><link rel="next" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C4-%E7%BD%91%E7%BB%9C%E5%B1%82ip/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C5-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82\/"
+        },"image": ["https:\/\/luckly.work\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  3543 ,
+        "url": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C5-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82\/","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": "https:\/\/luckly.work\/images\/avatar.png"},"author": {
+                "@type": "Person",
+                "name": "PTE"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/categories/documentation/"> 文档 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i> Github </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/categories/documentation/" title="">文档</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i>Github</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>PTE</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 3543 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 8 分钟&nbsp;<span id="/linux%E7%BD%91%E7%BB%9C5-%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82/" class="leancloud_visitors" data-flag-title="">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#数据链路层vs网络层">数据链路层VS网络层</a></li>
+    <li><a href="#以太网概念">以太网概念</a></li>
+    <li><a href="#以太网的帧格式报文格式也可以称之为mac帧">以太网的帧格式（报文格式）（也可以称之为MAC帧）</a>
+      <ul>
+        <li><a href="#mac地址的概念">MAC地址的概念</a></li>
+        <li><a href="#mac帧格式">MAC帧格式</a></li>
+      </ul>
+    </li>
+    <li><a href="#局域网通信原理">局域网通信原理</a></li>
+    <li><a href="#mtu">MTU</a>
+      <ul>
+        <li><a href="#mtu说明">MTU说明</a></li>
+        <li><a href="#mtu对ip协议的影响">MTU对IP协议的影响</a></li>
+        <li><a href="#mtu对udp协议的影响">MTU对UDP协议的影响</a></li>
+        <li><a href="#mtu对tcp协议的影响">MTU对TCP协议的影响</a></li>
+      </ul>
+    </li>
+    <li><a href="#arp协议">ARP协议</a>
+      <ul>
+        <li><a href="#arp协议的作用">ARP协议的作用</a></li>
+        <li><a href="#arp数据报格式">ARP数据报格式</a></li>
+        <li><a href="#arp请求arp应答的过程">ARP请求+ARP应答的过程</a></li>
+        <li><a href="#arp欺骗">ARP欺骗</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="数据链路层vs网络层">数据链路层VS网络层</h1>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/1205361f43de4fc8905c5bf8d7335e2a.png"
+        data-srcset="https://img-blog.csdnimg.cn/1205361f43de4fc8905c5bf8d7335e2a.png, https://img-blog.csdnimg.cn/1205361f43de4fc8905c5bf8d7335e2a.png 1.5x, https://img-blog.csdnimg.cn/1205361f43de4fc8905c5bf8d7335e2a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/1205361f43de4fc8905c5bf8d7335e2a.png"
+        title="img" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/d37b270f87cd47db888bc408a2d045a1.png"
+        data-srcset="https://img-blog.csdnimg.cn/d37b270f87cd47db888bc408a2d045a1.png, https://img-blog.csdnimg.cn/d37b270f87cd47db888bc408a2d045a1.png 1.5x, https://img-blog.csdnimg.cn/d37b270f87cd47db888bc408a2d045a1.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/d37b270f87cd47db888bc408a2d045a1.png"
+        title="img" />IP：根据目的IP地址，在复杂的网络环境中确定一个合适的IP数据包传输路径。</p>
+<p>而主机B到路由器F，F到G，G到H等等的局域网数据转发的问题，都是<strong>由数据链路层在这个局域网中完成转发任务的。</strong></p>
+<h1 id="以太网概念">以太网概念</h1>
+<p>&ldquo;以太网&rdquo; 不是一种具体的网络, 而是一种技术标准; 既包含了数据链路层的内容, 也包含了一些物理层的内容. 例如: 规定了网络拓扑结构, 访问控制方式, 传输速率等;</p>
+<p>例如以太网中的网线必须使用双绞线; 传输速率有10M, 100M, 1000M等;</p>
+<p><strong>以太网是当前应用最广泛的局域网技术;</strong> 和以太网并列的还有令牌环网, 无线LAN等;</p>
+<p>故上方所说的局域网转发时一个节点到另一个节点的转发，本质都是在以太网中进行的。</p>
+<p>以太网是一种局域网技术。</p>
+<h1 id="以太网的帧格式报文格式也可以称之为mac帧">以太网的帧格式（报文格式）（也可以称之为MAC帧）</h1>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/img_convert/ad68e8c8411dff6bb51a33eeceec4aa5.jpeg"
+        data-srcset="https://img-blog.csdnimg.cn/img_convert/ad68e8c8411dff6bb51a33eeceec4aa5.jpeg, https://img-blog.csdnimg.cn/img_convert/ad68e8c8411dff6bb51a33eeceec4aa5.jpeg 1.5x, https://img-blog.csdnimg.cn/img_convert/ad68e8c8411dff6bb51a33eeceec4aa5.jpeg 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/img_convert/ad68e8c8411dff6bb51a33eeceec4aa5.jpeg"
+        title="img" /></p>
+<p>源地址和目的地址是指网卡的硬件地址(也叫MAC地址), 长度是48位,是在网卡出厂时固化的</p>
+<p>帧协议类型字段有三种值,分别对应IP、ARP、RARP;分别对应0800 0806 8035</p>
+<h2 id="mac地址的概念">MAC地址的概念</h2>
+<p><strong>MAC地址用来识别数据链路层中相连的节点（标识数据链路层中的主机的唯一性~）</strong></p>
+<p>长度为48位, 即6个字节. 一般用16进制数字加上冒号的形式来表示(例如: 08:00:27:03:fb:19)</p>
+<p>在网卡出厂时就确定了, 不能修改. mac地址通常是唯一的（所以说数据链路层是驱动层~）</p>
+<p>IP地址描述的是路途总体的 起点 和 终点;</p>
+<p>MAC地址描述的是路途上的每一个局域网区间的起点和终点;（解耦）</p>
+<h2 id="mac帧格式">MAC帧格式</h2>
+<p>目的地址和源地址都是MAC地址，类型标识了数据链路层进行解包之后，将有效载荷交给上层的谁，比如交给IP层（则有效载荷就是IP报文），还是ARP层（后面说ARP协议）</p>
+<p>报头定长，可以进行解包，向上分用依据的就是类型字段的内容。</p>
+<h1 id="局域网通信原理">局域网通信原理</h1>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/1de0f619d63843e788e82bdde6fe4926.png"
+        data-srcset="https://img-blog.csdnimg.cn/1de0f619d63843e788e82bdde6fe4926.png, https://img-blog.csdnimg.cn/1de0f619d63843e788e82bdde6fe4926.png 1.5x, https://img-blog.csdnimg.cn/1de0f619d63843e788e82bdde6fe4926.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/1de0f619d63843e788e82bdde6fe4926.png"
+        title="img" /></p>
+<p><strong>局域网内通信时，不管是两个主机之间，还是主机与路由器之间，都需要数据链路层封装MAC帧，来进行局域网转发。</strong></p>
+<p>这个过程就像在教室内，任意两个人进行交流一样（大声交流，不是小声交流），这里比如H1发送数据帧后，这个局域网中所有主机都会收到这个MAC帧， 由数据链路层进行解析，发现目的MAC地址不是自己，则就会直接丢弃。</p>
+<p>因为可能存在两个主机同时发送数据帧的情况，故<strong>MAC数据帧在以太网中传输时可能发生碰撞</strong>，此时，会有碰撞避免算法，比如发送方知道自己发出的MAC帧发生了碰撞，就随机等待若干时长之后再进行重传（所以严格来说，除了TCP有可靠性，数据链路层也有可靠性策略存在）</p>
+<p>故</p>
+<ul>
+<li>局域网内主机越少越好（更小概率发生数据碰撞）</li>
+<li>局域网内节点发送数据帧时，数据帧越短越好~</li>
+</ul>
+<p>所以，回归到之前讲IP时，说存在MTU限制，就是因为数据链路层因为物理原因有限制，这里其实就是根本原因（好像~）</p>
+<p>在网络转发过程中，目的IP不会变，MAC数据帧的源MAC和目的MAC会变。</p>
+<h1 id="mtu">MTU</h1>
+<h2 id="mtu说明">MTU说明</h2>
+<p>MTU（Maximum Transmission Unit）最大传输单元（IP报文长度）</p>
+<p>MTU相当于发快递时对包裹尺寸的限制. 这个限制是不同的数据链路对应的物理层产生的限制。</p>
+<p>以太网帧中的数据长度规定最小46字节,最大1500字节（这里的数据其实就是IP报文！或者ARP报文）</p>
+<p>最大值1500称为以太网的最大传输单元(MTU),不同的网络类型有不同的MTU;</p>
+<h2 id="mtu对ip协议的影响">MTU对IP协议的影响</h2>
+<p>由于数据链路层MTU的限制, 对于较大的IP数据包要进行分包（分片）.</p>
+<h2 id="mtu对udp协议的影响">MTU对UDP协议的影响</h2>
+<p>一旦UDP携带的数据超过1472(1500 - 20(IP首部) - 8(UDP首部)), 那么就会在网络层分成多个IP数据报.（这里的数据指的当然就是应用层数据啦~）</p>
+<p>这多个IP数据报有任意一个丢失, 都会引起接收端网络层重组失败. 那么这就意味着, <strong>如果UDP数据报在网络层被分片, 整个数据被丢失的概率就大大增加了.</strong></p>
+<h2 id="mtu对tcp协议的影响">MTU对TCP协议的影响</h2>
+<p>TCP的一个数据报也不能无限大, 还是受制于MTU. <strong>TCP的单个数据段的最大有效载荷长度, 称为MSS(Max Segment Size)最大报文段长度;（指的是TCP的有效载荷，即应用层数据）</strong></p>
+<p><strong>TCP在建立连接的过程中, 通信双方会进行MSS协商.</strong></p>
+<p>最理想的情况下, MSS的值正好是在IP不会被分片处理的最大长度(这个长度仍然是受制于数据链路层的MTU).</p>
+<p>双方在发送SYN的时候会在TCP头部写入自己能支持的MSS值. 然后双方得知对方的MSS值之后, 选择较小的作为最终MSS. MSS的值就是在TCP首部的40字节变长选项中(kind=2);<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20191026153728839.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYW90aW5nNDUxMjkyNTEw,size_16,color_FFFFFF,t_70"
+        data-srcset="https://img-blog.csdnimg.cn/20191026153728839.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYW90aW5nNDUxMjkyNTEw%2csize_16%2ccolor_FFFFFF%2ct_70, https://img-blog.csdnimg.cn/20191026153728839.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYW90aW5nNDUxMjkyNTEw%2csize_16%2ccolor_FFFFFF%2ct_70 1.5x, https://img-blog.csdnimg.cn/20191026153728839.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYW90aW5nNDUxMjkyNTEw%2csize_16%2ccolor_FFFFFF%2ct_70 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20191026153728839.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3hpYW90aW5nNDUxMjkyNTEw,size_16,color_FFFFFF,t_70"
+        title="#TCP/IP# TCP头部选项功能详解_arvin_xiaoting的博客-CSDN博客_tcp选项" /></p>
+<hr>
+<p>注意，之前讲MAC帧时格式时，发现MAC帧里的类型字段，不仅仅标识着IP，还有ARP，也就是MAC帧的有效载荷不一定为IP报文，还有可能是ARP报文。</p>
+<p><strong>同时，在局域网中，当某一个路由器得到数据报，由目的IP决定转发给下一跳X路由器时，由数据链路层封装MAC帧，但是，此时X路由器的MAC地址是不知道的，因此要封装MAC帧，进而转发给X路由器，必须先知道其MAC地址。ARP协议就是用来解决此问题的。</strong></p>
+<h1 id="arp协议">ARP协议</h1>
+<p><strong>在同一网段中，通过目标节点IP，获取对方的MAC地址 &ndash; ARP协议，地址解析协议。（局域网协议）</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/7b21dca168244e3f9e9d78568f2de09c.png"
+        data-srcset="https://img-blog.csdnimg.cn/7b21dca168244e3f9e9d78568f2de09c.png, https://img-blog.csdnimg.cn/7b21dca168244e3f9e9d78568f2de09c.png 1.5x, https://img-blog.csdnimg.cn/7b21dca168244e3f9e9d78568f2de09c.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/7b21dca168244e3f9e9d78568f2de09c.png"
+        title="img" /><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw=="
+        data-srcset="data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==, data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== 1.5x, data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== 2x"
+        data-sizes="auto"
+        alt="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw=="
+        title="点击并拖拽以移动" />编辑</p>
+<p><strong>ARP协议是一种介于以太网MAC层和网络层之间的协议。且严格来说属于数据链路层</strong>（介于数据链路层和网 络层之间的协议;）</p>
+<h2 id="arp协议的作用">ARP协议的作用</h2>
+<p>ARP协议建立了主机 IP地址 和 MAC地址 的映射关系. （通过目标主机IP地址获取目标主机的MAC地址（在同一局域网中））</p>
+<p>在网络通讯时,源主机的应用程序知道目的主机的IP地址和端口号,却不知道目的主机的硬件地址; 数据包首先是被网卡接收到再去处理上层协议的,如果接收到的数据包的硬件地址与本机不符,则直接丢弃; 因此在通讯前必须获得目的主机的硬件地址;（通过ARP协议）</p>
+<h2 id="arp数据报格式">ARP数据报格式</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/74b7683a5cec4f40aec68a6c938e441b.png"
+        data-srcset="https://img-blog.csdnimg.cn/74b7683a5cec4f40aec68a6c938e441b.png, https://img-blog.csdnimg.cn/74b7683a5cec4f40aec68a6c938e441b.png 1.5x, https://img-blog.csdnimg.cn/74b7683a5cec4f40aec68a6c938e441b.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/74b7683a5cec4f40aec68a6c938e441b.png"
+        title="img" /><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw=="
+        data-srcset="data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==, data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== 1.5x, data:image/gif;base64%2cR0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== 2x"
+        data-sizes="auto"
+        alt="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw=="
+        title="点击并拖拽以移动" />编辑</p>
+<p>硬件类型指链路层网络类型,1为以太网;协议类型指要转换的地址类型,0x0800为IP地址; 硬件地址长度对于以太网地址为6字节; 协议地址长度对于和IP地址为4字节;</p>
+<p>op字段为1表示ARP请求,op字段为2表示ARP应答。</p>
+<h2 id="arp请求arp应答的过程">ARP请求+ARP应答的过程</h2>
+<p>假设主机A的IP为IP_A，MAC地址为MAC_A，主机D的IP为IP_D，MAC地址未知。此时AD主机在同一局域网中，由主机A发起ARP请求，再由主机D发起ARP应答，从而由主机A获取主机D的MAC地址。<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/23ce8e2fdc884a2397b9932a6194d3aa.png"
+        data-srcset="https://img-blog.csdnimg.cn/23ce8e2fdc884a2397b9932a6194d3aa.png, https://img-blog.csdnimg.cn/23ce8e2fdc884a2397b9932a6194d3aa.png 1.5x, https://img-blog.csdnimg.cn/23ce8e2fdc884a2397b9932a6194d3aa.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/23ce8e2fdc884a2397b9932a6194d3aa.png"
+        title="img" /></p>
+<p>主机A由ARP层封装ARP请求，向下交付给MAC层，封装MAC帧。因为此时不知道D的MAC地址，故其中的目标以太网地址设为全F，表示这是一个广播地址**（以太网帧首部的目的地址填FF:FF:FF:FF:FF:FF表示广播）**。在局域网中，每一个主机都会收到这个广播MAC帧，此时MAC层必须处理：先解包，然后向上交付，因为每个主机的MAC层都无法直接获知这个MAC帧是否是发送给自己的。根据0806，交付给arp层，arp层收到后，看到op是1，也就是arp请求。再看目的IP地址，发现是发给自己的（若不是自己就直接丢弃此报文）</p>
+<p>主机D再进行构建ARP应答，此时op为2，且目标IP，目标以太网地址，发送端IP，发送端以太网地址都已知。此时，这不再是一个广播，而是一个<strong>定向的局域网MAC帧</strong>。但是，局域网中每一个主机仍会收到这个MAC帧，其他主机收到之后，在MAC层比对目标MAC地址，不是发给自己的直接丢弃。主机A收到之后，解包，0806，交付给上层的arp层。自此主机A获取到了主机D的MAC地址，可以在主机A内部构建此IP：MAC地址的映射。</p>
+<p>总结：</p>
+<ol>
+<li>
+<p>arp请求和arp应答的过程为：1. 先广播arp请求（目的MAC地址为全F） 2. 再定向1v1发送arp应答。（以太网帧首部的硬件地址填FF:FF:FF:FF:FF:FF表示广播）</p>
+</li>
+<li>
+<p>局域网中，任何一个主机收到arp时，可能是一个应答，也可能是一个请求。看arp报文的op字段</p>
+</li>
+<li>
+<p>arp请求的非接收主机在arp层丢弃。arp应答的非接收主机在MAC层丢弃。（广播和定向导致）</p>
+</li>
+<li>
+<p>arp请求成功之后，请求方会暂时将IP : MAC地址的映射关系暂时保存下来。因为IP地址不是固定的，故并不是永久保存~</p>
+</li>
+<li>
+<p>arp的过程并非只发生在目标主机的最终子网处，在网络传输的路径过程中随时可能发生。</p>
+</li>
+<li>
+<p>每台主机都维护一个ARP缓存表,可以用arp -a命令查看。缓存表中的表项有过期时间(一般为20分钟),如 果20分钟内没有再次使用某个表项,则该表项失效,下次局域网通信时要发ARP请求来获得目的主机的硬件地址。</p>
+</li>
+</ol>
+<h2 id="arp欺骗">ARP欺骗</h2>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/60a38d704fc6447f90b67f862b2a7f9a.png"
+        data-srcset="https://img-blog.csdnimg.cn/60a38d704fc6447f90b67f862b2a7f9a.png, https://img-blog.csdnimg.cn/60a38d704fc6447f90b67f862b2a7f9a.png 1.5x, https://img-blog.csdnimg.cn/60a38d704fc6447f90b67f862b2a7f9a.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/60a38d704fc6447f90b67f862b2a7f9a.png"
+        title="img" /></p>
+<p>通过不断发送arp应答，欺骗主机A和B，修改A存储的B的MAC地址，B存储的A的MAC地址。（http/https</p>
+<p>arp攻击：让某主机上不了网：给目标主机发送arp应答，ip为主机所连路由器IP，MAC地址为一个错误的。这样这个主机发出的MAC帧，路由器就收不到了，因为其中的目的MAC地址是错误的。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+            <a href="/linux%E7%BD%91%E7%BB%9C4-%E7%BD%91%E7%BB%9C%E5%B1%82ip/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">PTE</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"valine":{"appId":"cIRpq8figzQxyGz5LyAdUahJ-gzGzoHsz","appKey":"T9YWfgGhznKaXXx7TCLxzS3C","avatar":"robohash","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":true,"highlight":true,"lang":true,"meta":true,"pageSize":true,"placeholder":"说点什么吧...","recordIP":true,"visitor":true}},"data":{"id-1":"PTE","id-2":"PTE"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.zh-cn","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

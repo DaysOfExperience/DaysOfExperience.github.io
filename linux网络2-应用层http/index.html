@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title> - PTE</title><meta name="Description" content="PTE"><meta property="og:title" content="" />
+<meta property="og:description" content="应用层负责应用程序之间的数据沟通， 也是我们能直接接触的一层， 我们可以自己编写应用程序，并且定制相关的应用层协议 应用层协议主要分为两个大类，一" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://luckly.work/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http/" /><meta property="og:image" content="https://luckly.work/logo.png"/><meta property="article:section" content="posts" />
+
+<meta property="og:site_name" content="My cool site" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://luckly.work/logo.png"/>
+
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="应用层负责应用程序之间的数据沟通， 也是我们能直接接触的一层， 我们可以自己编写应用程序，并且定制相关的应用层协议 应用层协议主要分为两个大类，一"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http/" /><link rel="prev" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82/" /><link rel="next" href="https://luckly.work/linux%E7%BD%91%E7%BB%9C1-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http\/"
+        },"image": ["https:\/\/luckly.work\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  5150 ,
+        "url": "https:\/\/luckly.work\/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http\/","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": "https:\/\/luckly.work\/images\/avatar.png"},"author": {
+                "@type": "Person",
+                "name": "PTE"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/categories/documentation/"> 文档 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i> Github </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/categories/documentation/" title="">文档</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i>Github</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>PTE</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 5150 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 11 分钟&nbsp;<span id="/linux%E7%BD%91%E7%BB%9C2-%E5%BA%94%E7%94%A8%E5%B1%82http/" class="leancloud_visitors" data-flag-title="">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#自定义应用层协议-网络版计算器">自定义应用层协议-网络版计算器</a></li>
+      </ul>
+    </li>
+    <li><a href="#http协议">HTTP协议</a>
+      <ul>
+        <li><a href="#http协议概念">HTTP协议概念</a></li>
+        <li><a href="#http和https的区别">HTTP和HTTPS的区别？</a></li>
+        <li><a href="#url">URL</a>
+          <ul>
+            <li><a href="#todourl的进一步理解">todo：URL的进一步理解</a></li>
+          </ul>
+        </li>
+        <li><a href="#http协议的特点">HTTP协议的特点</a></li>
+        <li><a href="#http协议版本">HTTP协议版本</a></li>
+        <li><a href="#http协议格式">HTTP协议格式</a>
+          <ul>
+            <li><a href="#首行">首行</a>
+              <ul>
+                <li><a href="#请求首行">请求首行</a></li>
+                <li><a href="#响应首行">响应首行</a></li>
+              </ul>
+            </li>
+            <li><a href="#头部">头部</a>
+              <ul>
+                <li><a href="#请求头部"><strong>请求头部：</strong></a></li>
+                <li><a href="#响应头部"><strong>响应头部：</strong></a></li>
+                <li><a href="#http常用的header">HTTP常用的Header</a></li>
+              </ul>
+            </li>
+            <li><a href="#空行">空行</a></li>
+            <li><a href="#正文">正文</a>
+              <ul>
+                <li><a href="#请求正文">请求正文</a></li>
+                <li><a href="#响应正文">响应正文</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#muduo网络库的http协议支持">muduo网络库的HTTP协议支持</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><strong>应用层负责应用程序之间的数据沟通， 也是我们能直接接触的一层， 我们可以自己编写应用程序，并且定制相关的应用层协议</strong>
+<strong>应用层协议主要分为两个大类，一个是像HTTP,FTP,DNS等知名协议，另一类是自定制协议。</strong></p>
+<h2 id="自定义应用层协议-网络版计算器">自定义应用层协议-网络版计算器</h2>
+<p><strong>协议，即是约定，是计算机网络中进行数据交换而建立的规则、标准或约定的集合。</strong>
+对于我们自己编写的应用程序，知名协议未必能够满足我们的需求，所以我们应该结合自己应用的特点，来定制一个更合适的协议。</p>
+<p><strong>如何自定制协议呢？简单来说，就是根据数据的格式和描述信息，来指定一个序列化（加密），反序列化（解析）的过程。</strong></p>
+<p>序列化：将多个数据对象按照指定的协议进行组织成为持久化存储/数据传输的二进制数据串
+反序列化：将二进制数据串通过指定的协议进行解析得到各个的数据对象</p>
+<p>源端通过自己定义的协议，将数据按照某种方法进行序列化成二进制数据串。对端接受数据时，只有按照这个协议反序列化才能解析出原来的数据。</p>
+<p>常用的序列化方法：结构体二进制序列化，json序列化，protobuf序列化等</p>
+<hr>
+<blockquote>
+<p>例如, 我们需要实现一个服务器版的加法器. 我们需要客户端把要计算的两个加数发过去, 然后由服务器进行计算,  后再把结果返回给客户端.</p>
+<p>约定方案一:
+客户端发送一个形如&quot;1+1&quot;的字符串; 这个字符串中有两个操作数, 都是整形; 两个数字之间会有一个字符是运算符, 运算符只能是 + ; 数字和运算符之间没有空格; &hellip;</p>
+<p>约定方案二:
+定义结构体来表示我们需要交互的信息; 发送数据时将这个结构体按照一个规则转换成字符串, 接收到数据的时候再按照相同的规则把字符串转 化回结构体; 这个过程叫做 &ldquo;序列化&rdquo; 和 &ldquo;反序列化&rdquo;</p>
+<p>无论我们采用方案一, 还是方案二, 还是其他的方案, 只要保证, 一端发送时构造的数据, 在另一端能够正确的进行解析, 就是ok的. 这种约定, 就是应用层协议</p>
+</blockquote>
+<p>虽然我们说, 应用层协议是我们程序猿自己定的.  但实际上, 已经有大佬们定义了一些现成的, 又非常好用的应用层协议, 供我们直接参考使用. HTTP(超文本传输协议) 就是其中之一</p>
+<h1 id="http协议">HTTP协议</h1>
+<h2 id="http协议概念">HTTP协议概念</h2>
+<p><strong>HTTP协议，即超文本传输协议，是用于从万维网服务器传输超文本到本地浏览器的传送协议。</strong>（超文本大概就是，不仅仅是文字，还有多媒体：视频、图片、动画等。还有就是有超链接，即点击一个按钮可以跳到另一个页面去，每个页面都可以这样跳来跳去，就形成一个网络）下面就来介绍HTTP的组成与特性</p>
+<h2 id="http和https的区别">HTTP和HTTPS的区别？</h2>
+<p><strong>HTTPS协议，现在几乎使用的都是HTTPS，HTTPS基于HTTP协议，通过SSL或TLS提供加密处理数据，其实就是披着SSL外壳的HTTP协议，其本质还是HTTP。</strong></p>
+<h2 id="url">URL</h2>
+<h3 id="todourl的进一步理解">todo：URL的进一步理解</h3>
+<p>一提到HTTP协议，少不了的就是最重要的URL
+<strong>URL：即统一资源定位符，用于在网络中定位某台主机上的某一个资源，也就是我们通常所说的网址。</strong></p>
+<p>URL由以下几部分组成
+<strong>协议://用户名:密码@服务器ip地址:服务器端口/文件路径?查询字符串#片段标识符</strong></p>
+<p>协议：请求需要使用的协议，现在通常为http,https
+用户名密码：认证用户的用户名密码，为了安全一般都不会显示。
+服务器地址：这里通常都不会是ip地址，而是域名，通过域名解析服务器就能够得到服务器的ip地址。
+服务器端口:   http协议的端口默认是80，但也可以选择其他的，默认是不显示的。
+文件路径：即请求的资源在http服务器上的路径
+查询字符串：客户端请求中的额外参数，由key=value的键值对组成，以&amp;作为分隔符
+片段标识符：html的标签id，可以直接跳转到页面的某个位置</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617173244846.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617173244846.png, https://img-blog.csdnimg.cn/20200617173244846.png 1.5x, https://img-blog.csdnimg.cn/20200617173244846.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617173244846.png"
+        title="在这里插入图片描述" /></p>
+<p>同时对于? # / , : 等特殊字符，会通过urlencode的方式进行转义。转义的规则如下:
+将需要转码的字符转为16进制，然后从右到左，取4位(不足4位直接处理)，每2位做一位，前面加上%，编码成%XY格式</p>
+<h2 id="http协议的特点">HTTP协议的特点</h2>
+<ol>
+<li>
+<p><strong>HTTP是无连接：</strong>
+无连接的含义是限制每次连接只处理一个请求。服务端处理客户端的请求，并收到客户的应答后，即断开连接。采用这种方式可以节省传输时间。</p>
+</li>
+<li>
+<p><strong>HTTP是灵活的：</strong>
+只要客户端和服务器知道如何处理的数据内容，<strong>任何类型的数据都可以通过HTTP发送。通过头部中的Content-Type来标记正在传输的类型</strong></p>
+</li>
+<li>
+<p><strong>HTTP是无状态的：</strong>
+无状态是指对于事务处理没有记忆能力，服务器不知道客户端是什么状态，即我们给服务器发送 HTTP 请求之后，服务器会根据请求给我们发送数据过来，但是发送完后不会记录任何信息。
+无状态是一把双刃剑，如果后续处理需要前面的信息，则它必须重传，这样可能导致每次连接传送的数据量增大。而如果服务器不需要先前信息时，它的应答就较快。</p>
+</li>
+</ol>
+<h2 id="http协议版本">HTTP协议版本</h2>
+<p>HTTP协议有四个版本，分别是0.9、1.0、1.1、2.0。现在大部分用的都是1.1版本</p>
+<p><strong>0.9版本</strong>：这时的http协议没有标准格式，仅用于传输html（超文本标记语言）数据，而且只有get方法。并且连接方式为短连接
+短连接：建立连接，发送一个请求，得到响应后关闭连接</p>
+<img src="https://img-blog.csdnimg.cn/20200617220412971.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:67%;" />
+<p><strong>1.0版本:1.0版本正式规定了HTTP协议格式，并且增加了多重请求方法，并且支持不同文件格式的数据流，同时部分应用商已经开始使用长连接（受限制的长连接）</strong>
+<strong>1.0定义了三种请求方法： GET, POST 和 HEAD方法。</strong>
+<strong>长连接：一次连接可以发送多条请求</strong></p>
+<img src="https://img-blog.csdnimg.cn/20200617220601644.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom: 80%;" />
+<p>1.1版本：增加了更多的请求方法和头部描述信息，并支持了长连接和管线化传输。
+1.1新增了五种请求方法：OPTIONS, PUT, DELETE, TRACE 和 CONNECT 方法
+<strong>管线化传输：可以连续发送多个请求，只需要按顺序响应就行，不需要响应后才发下一个请求。</strong>
+但是还存在约束条件，响应的顺序必须与请求的顺序保持一致，通过队列实现，如果不一致则在队首阻塞。</p>
+<img src="https://img-blog.csdnimg.cn/20200617210323721.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:80%;" />
+<p><strong>2.0版本：采用二进制流传输，并且进行多路复用，允许服务端主动推送数据</strong>
+<strong>多路复用：响应顺序可以与请求的顺序不一致，因为头部中标识了对应的请求信息。提高了信道的利用率</strong></p>
+<img src="https://img-blog.csdnimg.cn/20200617210920399.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:80%;" />
+<p><strong>3.0版本：</strong>
+在3.0版本中HTTP采取了革命性的变化，其将网络协议从TCP切换至QUIC (Quick UDP Internet Connections), 快速 UDP 互联网连接。 PS:QUIC是基于UDP协议的。</p>
+<blockquote>
+<p>QUIC协议主要解决了两个问题</p>
+<p>线头阻塞问题：基于TCP的HTTP2.0的多路复用机制，尽管从逻辑上来说，不同的流之间相互独立，不会相互影响，但在实际传输方面，数据还是要一帧一帧的发送和接收，一旦某一个流的数据有丢包，则同样会阻塞在它之后传输的流数据传输。而基于UDP的QUIC协议则可以更为彻底地解决这样的问题，让不同的流之间真正的实现相互独立传输，互不干扰。
+切换网络时的连接保持：当前移动端的应用环境，用户的网络可能会经常切换，比如从办公室或家里出门，WiFi断开，网络切换为移动网络。基于TCP的协议，由于切换网络之后，IP会改变，因而之前的连接不可能继续保持。而基于UDP的QUIC协议，则可以内建与TCP中不同的连接标识方法，从而在网络完成切换之后，恢复之前与服务器的连接。</p>
+</blockquote>
+<h2 id="http协议格式">HTTP协议格式</h2>
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813135650870.png" alt="image-20230813135650870" style="zoom: 67%;" />
+<img src="C:\Users\yangzilong\AppData\Roaming\Typora\typora-user-images\image-20230813135815377.png" alt="image-20230813135815377" style="zoom:67%;" />
+<p><strong>从上面抓取的数据分析，HTTP主要有以下四个部分组成，首行，头部，空行，正文， 并且请求和响应报文细节上都不同。
+第一行为首行，紧接着是头部，之后通过一个空行间隔，接下来的则是正文</strong></p>
+<h3 id="首行">首行</h3>
+<h4 id="请求首行">请求首行</h4>
+<p>[请求方法][URL][协议版本]\r\n
+如：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617181128576.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617181128576.png, https://img-blog.csdnimg.cn/20200617181128576.png 1.5x, https://img-blog.csdnimg.cn/20200617181128576.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617181128576.png"
+        title="在这里插入图片描述" /></p>
+<p><strong>请求方法</strong></p>
+<p>共有GET,、POST 、HEAD、OPTIONS、PUT、PATCH、DELETE、TRACE 、CONNECT 等方法。</p>
+<p><strong>各种请求方法的功能</strong></p>
+<blockquote>
+<p>GET：请求指定的页面信息，并返回实体主体。
+HEAD：类似于 GET 请求，只不过返回的响应中没有具体的内容，用于获取报头
+POST：向指定资源提交数据进行处理请求（例如提交表单或者上传文件）。数据被包含在请求体中。POST请求可能会导致新的资源的建立和/或已有资源的修改。
+PUT：从客户端向服务器传送的数据取代指定的文档的内容。
+DELETE：请求服务器删除指定的页面。
+CONNEC：HTTP/1.1 协议中预留给能够将连接改为管道方式的代理服务器。
+OPTIONS ：允许客户端查看服务器的性能。
+TRACE： 回显服务器收到的请求，主要用于测试或诊断。
+PATCH： 是对 PUT方法的补充，用来对已知资源进行局部更新 。</p>
+</blockquote>
+<h4 id="响应首行">响应首行</h4>
+<p><strong>[协议版本][响应状态码][响应状态码描述]\r\n</strong></p>
+<p>如：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617204237501.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617204237501.png, https://img-blog.csdnimg.cn/20200617204237501.png 1.5x, https://img-blog.csdnimg.cn/20200617204237501.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617204237501.png"
+        title="在这里插入图片描述" /></p>
+<p><strong>响应状态码：表示对于本次请求，服务端做出的响应结果。</strong>
+例如我们常见的404</p>
+<blockquote>
+<p>1**：信息，服务器收到请求，需要请求者继续执行操作
+2**：成功，操作被成功接收并处理 。常见：200
+3**：重定向，需要进一步的操作以完成请求。常见：301（永久重定向）、302（临时重定向）
+4**：客户端错误，请求包含语法错误或无法完成请求 。常见：400（请求错误）、404（资源不存在）
+5**：服务器错误，服务器在处理请求的过程中发生了错误。常见：500（服务器内部错误）、502（代理请求失败/无效响应）、504（代理请求超时）</p>
+</blockquote>
+<p><strong>状态码描述：对状态码的描述信息，可自定义。</strong></p>
+<h3 id="头部">头部</h3>
+<h4 id="请求头部"><strong>请求头部：</strong></h4>
+<p><strong>描述本次请求的关键字段信息，由key: value形式的键值对组成，并且每个键值对以\r\n作为结尾</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617205058595.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70"
+        data-srcset="https://img-blog.csdnimg.cn/20200617205058595.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70, https://img-blog.csdnimg.cn/20200617205058595.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70 1.5x, https://img-blog.csdnimg.cn/20200617205058595.png?x-oss-process=image/watermark%2ctype_ZmFuZ3poZW5naGVpdGk%2cshadow_10%2ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0%2csize_16%2ccolor_FFFFFF%2ct_70 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617205058595.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NDIzMTU0,size_16,color_FFFFFF,t_70"
+        title="在这里插入图片描述" /></p>
+<h4 id="响应头部"><strong>响应头部：</strong></h4>
+<p><strong>描述本次响应的关键字段信息，由key: value形式的键值对组成，并且每个键值对以\r\n作为结尾</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617205257746.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617205257746.png, https://img-blog.csdnimg.cn/20200617205257746.png 1.5x, https://img-blog.csdnimg.cn/20200617205257746.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617205257746.png"
+        title="在这里插入图片描述" /></p>
+<h4 id="http常用的header">HTTP常用的Header</h4>
+<blockquote>
+<p>Content-Type: 数据类型;
+Content-Length: 正文的长度 ;
+Transfer-Encoding:实体正文的传输方式;
+Expires:缓存过期时间;
+Referer: 当前页面是从哪个页面跳转过来的;
+Location: 3xx重定向的新地址;
+Host: 客户端告知服务器,所请求的资源是在哪个主机的哪个端口上;
+User-Agent: 声明用户的操作系统和浏览器版本信息;
+Set-Cookie：客户端通过Set-cookie向客户端传递的信息，会被保存在客户端浏览器的cookie文件中;
+Cookie: 客户端上保存的数据，客户端每次通信时从cookie文件中读取数据，并通过cookie字段向服务端传递信息（用于维持客户端状态信息）
+Session:服务端为客户端创建的会话，会话信息中描述了客户端的身份认证信息和状态信息，保存在服务端，可以通过cookie将session id返回给客户端，客户端每次通信都会通过cookie传输带有自己session的id。</p>
+</blockquote>
+<blockquote>
+<p>Cookie与Session
+因为HTTP是无状态的，但在实际情况中，我们还是需要保持状态的
+那么如何让HTTP来保持状态呢，答案就是借助Cookie和Session。
+举个例子，正好明天就是618,618作为一个大型的购物节，在一天的不同时间段，不同店铺中，会有着许多不同的活动，为了达到最大折扣，我们通常会在一天内多次进入如淘宝、京东等购物网站进行购物，但是因为HTTP是无状态的，所以它并不会记录我们的任何信息，所以我们在每次访问时都需要重新登陆来确认用户的身份，这是一种很麻烦的事情。所以大佬们为HTTP加入了Cookie来帮助其维持状态，在每次通信后，会将服务端的一些临时验证信息保存在客户端的cookie文件中。这样下次通信时，就可以通过读取cookie中保存的验证信息，将其传递给服务端，来维持客户端的状态，这样就可以避免多次登录。</p>
+<p>但是Cookie的使用不够安全，因为Cookie保存在客户端(浏览器）。而如果将这些重要的信息保存在本地，则很容易就会被脚本、爬虫等截取，造成不必要的损失，所以Cookie需要搭配Session使用。</p>
+<p>Session其实就是服务端为客户端创建的会话，其中描述了客户端的身份认证信息和状态信息，并且将其保存在服务端。服务端每次通信结束后都会将Session id（本次会话的ID）保存在客户端的Cookie中，客户端在下次通信时通过Cookie将保存的Session id传递给服务端，这样服务端就可以通过对应的Session id来查找到客户端的身份认证信息和状态信息，来为客户端维持状态，这样就可以避免重复登录。并且因为Cookie和Session分别保存在客户端和服务端，保证了一定的安全性。</p>
+<p>Cookie与session的区别是什么？
+Cookie保存在客户端上，是一些临时存储的数据，用于持续与服务端进行信息传递的一种手段。</p>
+<p>Session保存在服务端上，是一种会话的控制，会话信息中包含客户端的身份状态信息，通过Cookie传递Session id来查找到对应的身份状态信息，来实现状态维持。</p>
+</blockquote>
+<h3 id="空行">空行</h3>
+<p><strong>空行即为\r\n，用于间隔头部和正文。因为头部的每一个键值对以\r\n结束，所以一旦连续接收到两个\r\n的时候就代表着头部的接收结束。</strong></p>
+<h3 id="正文">正文</h3>
+<h4 id="请求正文">请求正文</h4>
+<p><strong>客户端提交的数据</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617212959338.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617212959338.png, https://img-blog.csdnimg.cn/20200617212959338.png 1.5x, https://img-blog.csdnimg.cn/20200617212959338.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617212959338.png"
+        title="在这里插入图片描述" /></p>
+<h4 id="响应正文">响应正文</h4>
+<p><strong>服务端响应的实体资源</strong></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img-blog.csdnimg.cn/20200617213017581.png"
+        data-srcset="https://img-blog.csdnimg.cn/20200617213017581.png, https://img-blog.csdnimg.cn/20200617213017581.png 1.5x, https://img-blog.csdnimg.cn/20200617213017581.png 2x"
+        data-sizes="auto"
+        alt="https://img-blog.csdnimg.cn/20200617213017581.png"
+        title="在这里插入图片描述" /></p>
+<p><strong>这里显示为乱码的原因是因为这里用的是https协议，该协议会对响应的内容加密，中间者无法直接查看明文内容</strong></p>
+<h1 id="muduo网络库的http协议支持">muduo网络库的HTTP协议支持</h1>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 0001-01-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux%E7%BD%91%E7%BB%9C3-%E4%BC%A0%E8%BE%93%E5%B1%82/" class="prev" rel="prev" title=""><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i></a>
+            <a href="/linux%E7%BD%91%E7%BB%9C1-%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">PTE</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"valine":{"appId":"cIRpq8figzQxyGz5LyAdUahJ-gzGzoHsz","appKey":"T9YWfgGhznKaXXx7TCLxzS3C","avatar":"robohash","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":true,"highlight":true,"lang":true,"meta":true,"pageSize":true,"placeholder":"说点什么吧...","recordIP":true,"visitor":true}},"data":{"id-1":"PTE","id-2":"PTE"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.zh-cn","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

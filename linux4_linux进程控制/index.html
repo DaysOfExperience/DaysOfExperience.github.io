@@ -1,70 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
-        <title> - My New Hugo Site</title><meta name="Description" content="This is my cool site"><meta property="og:title" content="" />
-<meta property="og:description" content="4_Linux进程控制 进程创建 fork创建子进程做了什么？ 进程 = 内核数据结构 &#43; 进程的代码和数据 =&gt; 内核数据结构是操作系统创建的。而进程的代码和数据，一般是从磁盘中加载到内存而来。=&gt; fork创建子进程，由操作系统为子进程创建对应的内核数据结构：PCB，进程地址空间对象，页表等。虽然子进程内核数据结构中的大部分数据是从父进程那里拷贝来的，但是因为进程的独立性，这部分内核数据结构确实是子进程独有的。=&gt; 而子进程对应的代码和数据，并不是从磁盘中加载而来。而是直接和父进程”共享一份代码和数据“，可是，基于进程的独立性，父子进程共享一份代码和数据是如何实现的呢？=&gt; 对于代码：代码具有只读属性，也就是父子进程都不会修改，那么共享一份代码是完全可以的，同时这样还节省了内存空间 =&gt; 对于数据：事实上，子进程在创建初期，确实和父进程共享一份数据。
-基于进程独立性，本身，父子进程的数据必须分离。那么在子进程创建初期，直接在内存中拷贝一份父进程的数据是完全可以的。 但是这样有很大的内存浪费的风险。=&gt; 父进程的数据，并非所有子进程都需要使用。 即使需要使用，也不会立刻使用。 即使立刻使用，也不一定是写操作。=&gt; 基于高效和节省内存空间的理念，我们不能采取直接拷贝一份父进程的数据。=&gt; 故我们在子进程创建时，是和父进程共享同一份数据。=&gt; 对于只读的，父子进程共享数据完全可以。对于父进程写的，或者子进程写的数据。基于进程独立性，必须进行数据分离。 操作系统采用的即 写时拷贝技术，来将父子进程数据分离。
-进程调用fork，当控制转移到内核中的fork代码后，内核做：
-分配新的内存块和内核数据结构给子进程 将父进程部分数据结构内容拷贝至子进程 添加子进程到系统进程列表当中 fork返回，开始调度器调度 父子进程分离数据的方式：写时拷贝 写时拷贝，在fork创建子进程这里的具体操作是：创建子进程之后，当父子进程的任何一方以写方式访问某个数据时，操作系统在内存的其他区域拷贝一份这个数据，并修改写此数据的那个进程的页表映射关系，使父子进程访问的是物理内存中的不同数据。以达到父子进程数据分离的效果，避免互相干扰。
-写时拷贝好处： 在对数据进行写入时，再拷贝数据，是高效使用内存的一种表现，提高内存使用率，可以提高整机的运行效率。 写时拷贝还是一种延时申请的技术。提高内存使用率。
-有关程序计数器和EIP寄存器： 一个事实：在fork创建子进程之后，父子进程的代码是共享的。那么为什么子进程是从fork内部的return或者说fork之后的代码开始执行呢？ 我们知道，子进程的创建是以父进程为模板的，比如大部分内核数据结构，代码，数据等。包括进程地址空间，页表。都是从父进程那里拷贝过来的。=&gt; 进程中的代码指令，每条代码指令都有地址，在CPU内部的寄存器中，有一个名为EIP的寄存器，称为程序计数器，Program Counter，简称PC。用于存放下一条需要执行的指令所在单元的地址。而CPU执行一个进程的代码指令就是依靠程序计数器。大致过程为：取指令（依据PC），分析指令（指令集架构ISA），执行指令。=&gt; 同时，进程并非一次就将全部的指令都执行完，而是执行若干时长，就需要切换为其他进程。切换前，之前的进程需要保存好程序计数器中的数据和其他相关数据。称为进程的上下文数据。以便下次切换为此进程时，可以继续上次CPU执行指令的进度。=&gt; 而fork创建子进程时，子进程的上下文数据都是从父进程那里拷贝过来的。所以，当子进程执行时，程序计数器中保存的指令地址致使子进程从父进程执行fork那里开始执行。同时fork之前的代码子进程是可见的，只是不是从头开始执行。
-fork常规用法 一个父进程希望复制自己，使父子进程同时执行不同的代码段。例如，父进程等待客户端请求，生成子 进程来处理请求。
-一个进程要执行一个不同的程序。例如子进程从fork返回后，调用exec函数。（比如OJ项目中，子进程通过execl来进行g&#43;&#43;或者运行生成的可执行程序来获取运行结果）
-fork什么时候会失败？ 系统中有太多的进程
-实际用户的进程数超过了限制
-vfork 创建一个子进程，共享同一个虚拟地址空间
-进程终止 进程终止时，操作系统做了什么？ 释放进程相关内核数据结构和对应的代码和数据。 即释放进程占用的资源。
-进程终止的分类情况 代码跑完，运行结果正确（符合预期）
-代码跑完，运行结果不正确（不符合预期）
-代码没有跑完，程序异常退出（崩溃）
-进程退出码 进程退出码，是当进程执行结束后，用于标识运行结果的。 通常情况下，0标识success，非0标识结果不正确。 非零值有无数个，用不同的非零值来标识不同的错误原因。所以，依据进程退出码，可以判断上方情况的1 和 2 当进程异常退出时（崩溃），是由操作系统发送信号给进程以实现的。此时，退出码没有意义。 进程的退出码是返回给上一级进程（父进程）的，用于上一级进程获取该进程执行结果用的。（如果上一级进程不关心，则可以忽略） C语言中定义了一套将退出码/错误码转化为字符串描述的方案，你可以设定一套自己的用于程序中。strerror库函数可以查询C语言规定的退出码对应的退出原因。 Linux下，echo $?可查询上一个进程执行的退出码" />
+        <title> - PTE</title><meta name="Description" content="PTE"><meta property="og:title" content="" />
+<meta property="og:description" content="4_Linux进程控制 进程创建 fork创建子进程做了什么？ 进程 = 内核数据结构 &#43; 进程的代码和数据 =&gt; 内核数据结构是操作系统创建的。而进程的代码和" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" /><meta property="og:image" content="http://example.org/logo.png"/><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://luckly.work/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" /><meta property="og:image" content="https://luckly.work/logo.png"/><meta property="article:section" content="posts" />
 
 <meta property="og:site_name" content="My cool site" />
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="http://example.org/logo.png"/>
+<meta name="twitter:image" content="https://luckly.work/logo.png"/>
 
 <meta name="twitter:title" content=""/>
-<meta name="twitter:description" content="4_Linux进程控制 进程创建 fork创建子进程做了什么？ 进程 = 内核数据结构 &#43; 进程的代码和数据 =&gt; 内核数据结构是操作系统创建的。而进程的代码和数据，一般是从磁盘中加载到内存而来。=&gt; fork创建子进程，由操作系统为子进程创建对应的内核数据结构：PCB，进程地址空间对象，页表等。虽然子进程内核数据结构中的大部分数据是从父进程那里拷贝来的，但是因为进程的独立性，这部分内核数据结构确实是子进程独有的。=&gt; 而子进程对应的代码和数据，并不是从磁盘中加载而来。而是直接和父进程”共享一份代码和数据“，可是，基于进程的独立性，父子进程共享一份代码和数据是如何实现的呢？=&gt; 对于代码：代码具有只读属性，也就是父子进程都不会修改，那么共享一份代码是完全可以的，同时这样还节省了内存空间 =&gt; 对于数据：事实上，子进程在创建初期，确实和父进程共享一份数据。
-基于进程独立性，本身，父子进程的数据必须分离。那么在子进程创建初期，直接在内存中拷贝一份父进程的数据是完全可以的。 但是这样有很大的内存浪费的风险。=&gt; 父进程的数据，并非所有子进程都需要使用。 即使需要使用，也不会立刻使用。 即使立刻使用，也不一定是写操作。=&gt; 基于高效和节省内存空间的理念，我们不能采取直接拷贝一份父进程的数据。=&gt; 故我们在子进程创建时，是和父进程共享同一份数据。=&gt; 对于只读的，父子进程共享数据完全可以。对于父进程写的，或者子进程写的数据。基于进程独立性，必须进行数据分离。 操作系统采用的即 写时拷贝技术，来将父子进程数据分离。
-进程调用fork，当控制转移到内核中的fork代码后，内核做：
-分配新的内存块和内核数据结构给子进程 将父进程部分数据结构内容拷贝至子进程 添加子进程到系统进程列表当中 fork返回，开始调度器调度 父子进程分离数据的方式：写时拷贝 写时拷贝，在fork创建子进程这里的具体操作是：创建子进程之后，当父子进程的任何一方以写方式访问某个数据时，操作系统在内存的其他区域拷贝一份这个数据，并修改写此数据的那个进程的页表映射关系，使父子进程访问的是物理内存中的不同数据。以达到父子进程数据分离的效果，避免互相干扰。
-写时拷贝好处： 在对数据进行写入时，再拷贝数据，是高效使用内存的一种表现，提高内存使用率，可以提高整机的运行效率。 写时拷贝还是一种延时申请的技术。提高内存使用率。
-有关程序计数器和EIP寄存器： 一个事实：在fork创建子进程之后，父子进程的代码是共享的。那么为什么子进程是从fork内部的return或者说fork之后的代码开始执行呢？ 我们知道，子进程的创建是以父进程为模板的，比如大部分内核数据结构，代码，数据等。包括进程地址空间，页表。都是从父进程那里拷贝过来的。=&gt; 进程中的代码指令，每条代码指令都有地址，在CPU内部的寄存器中，有一个名为EIP的寄存器，称为程序计数器，Program Counter，简称PC。用于存放下一条需要执行的指令所在单元的地址。而CPU执行一个进程的代码指令就是依靠程序计数器。大致过程为：取指令（依据PC），分析指令（指令集架构ISA），执行指令。=&gt; 同时，进程并非一次就将全部的指令都执行完，而是执行若干时长，就需要切换为其他进程。切换前，之前的进程需要保存好程序计数器中的数据和其他相关数据。称为进程的上下文数据。以便下次切换为此进程时，可以继续上次CPU执行指令的进度。=&gt; 而fork创建子进程时，子进程的上下文数据都是从父进程那里拷贝过来的。所以，当子进程执行时，程序计数器中保存的指令地址致使子进程从父进程执行fork那里开始执行。同时fork之前的代码子进程是可见的，只是不是从头开始执行。
-fork常规用法 一个父进程希望复制自己，使父子进程同时执行不同的代码段。例如，父进程等待客户端请求，生成子 进程来处理请求。
-一个进程要执行一个不同的程序。例如子进程从fork返回后，调用exec函数。（比如OJ项目中，子进程通过execl来进行g&#43;&#43;或者运行生成的可执行程序来获取运行结果）
-fork什么时候会失败？ 系统中有太多的进程
-实际用户的进程数超过了限制
-vfork 创建一个子进程，共享同一个虚拟地址空间
-进程终止 进程终止时，操作系统做了什么？ 释放进程相关内核数据结构和对应的代码和数据。 即释放进程占用的资源。
-进程终止的分类情况 代码跑完，运行结果正确（符合预期）
-代码跑完，运行结果不正确（不符合预期）
-代码没有跑完，程序异常退出（崩溃）
-进程退出码 进程退出码，是当进程执行结束后，用于标识运行结果的。 通常情况下，0标识success，非0标识结果不正确。 非零值有无数个，用不同的非零值来标识不同的错误原因。所以，依据进程退出码，可以判断上方情况的1 和 2 当进程异常退出时（崩溃），是由操作系统发送信号给进程以实现的。此时，退出码没有意义。 进程的退出码是返回给上一级进程（父进程）的，用于上一级进程获取该进程执行结果用的。（如果上一级进程不关心，则可以忽略） C语言中定义了一套将退出码/错误码转化为字符串描述的方案，你可以设定一套自己的用于程序中。strerror库函数可以查询C语言规定的退出码对应的退出原因。 Linux下，echo $?可查询上一个进程执行的退出码"/>
-<meta name="application-name" content="My cool site">
-<meta name="apple-mobile-web-app-title" content="My cool site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+<meta name="twitter:description" content="4_Linux进程控制 进程创建 fork创建子进程做了什么？ 进程 = 内核数据结构 &#43; 进程的代码和数据 =&gt; 内核数据结构是操作系统创建的。而进程的代码和"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" /><link rel="prev" href="http://example.org/linux5_gcc%E7%BC%96%E8%AF%91%E7%9A%84%E8%BF%87%E7%A8%8B%E5%8A%A8%E9%9D%99%E6%80%81%E5%BA%93/" /><link rel="next" href="http://example.org/linux3_linux%E8%BF%9B%E7%A8%8B%E6%A6%82%E5%BF%B5/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="/lib/fontawesome-free/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" href="/lib/animate/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><script type="application/ld+json">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://luckly.work/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" /><link rel="prev" href="https://luckly.work/linux5_gcc%E7%BC%96%E8%AF%91%E7%9A%84%E8%BF%87%E7%A8%8B%E5%8A%A8%E9%9D%99%E6%80%81%E5%BA%93/" /><link rel="next" href="https://luckly.work/linux3_linux%E8%BF%9B%E7%A8%8B%E6%A6%82%E5%BF%B5/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
         "headline": "",
-        "inLanguage": "en",
+        "inLanguage": "zh-CN",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "http:\/\/example.org\/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6\/"
-        },"genre": "posts","wordcount":  235 ,
-        "url": "http:\/\/example.org\/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6\/","publisher": {
+            "@id": "https:\/\/luckly.work\/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6\/"
+        },"image": ["https:\/\/luckly.work\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  3963 ,
+        "url": "https:\/\/luckly.work\/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6\/","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
-            "name": ""},"author": {
+            "name": "xxxx","logo": "https:\/\/luckly.work\/images\/avatar.png"},"author": {
                 "@type": "Person",
-                "name": "xxxx"
+                "name": "PTE"
             },"description": ""
     }
     </script></head>
@@ -73,21 +43,21 @@ vfork 创建一个子进程，共享同一个虚拟地址空间
         <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
     <div class="header-wrapper">
         <div class="header-title">
-            <a href="/" title="My New Hugo Site"></a>
+            <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-1" class="typeit"></span></a>
         </div>
         <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/categories/documentation/"> 文档 </a><a class="menu-item" href="/about/"> 关于 </a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i> Github </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
                             <i class="fas fa-search fa-fw" aria-hidden="true"></i>
                         </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
                             <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
                         </a>
                         <span class="search-button search-loading" id="search-loading-desktop">
                             <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
                         </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
                     <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
                 </a></div>
         </div>
@@ -96,7 +66,7 @@ vfork 创建一个子进程，共享同一个虚拟地址空间
     <div class="header-container">
         <div class="header-wrapper">
             <div class="header-title">
-                <a href="/" title="My New Hugo Site"></a>
+                <a href="/" title="PTE"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw'></i></span><span id="id-2" class="typeit"></span></a>
             </div>
             <div class="menu-toggle" id="menu-toggle-mobile">
                 <span></span><span></span><span></span>
@@ -104,11 +74,11 @@ vfork 创建一个子进程，共享同一个虚拟地址空间
         </div>
         <div class="menu" id="menu-mobile"><div class="search-wrapper">
                     <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
                             <i class="fas fa-search fa-fw" aria-hidden="true"></i>
                         </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
                             <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
                         </a>
                         <span class="search-button search-loading" id="search-loading-mobile">
@@ -116,9 +86,9 @@ vfork 创建一个子进程，共享同一个虚拟地址空间
                         </span>
                     </div>
                     <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
+                        取消
                     </a>
-                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/categories/documentation/" title="">文档</a><a class="menu-item" href="/about/" title="">关于</a><a class="menu-item" href="https://github.com/DaysOfExperience" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw'></i>Github</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
                 <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
             </a></div>
     </div>
@@ -129,48 +99,54 @@ vfork 创建一个子进程，共享同一个虚拟地址空间
         <div id="search-dropdown-mobile"></div>
     </div><main class="main">
                 <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
+            <h2 class="toc-title">目录</h2>
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX"></h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>xxxx</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;235 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>PTE</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="0001-01-01">0001-01-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 3963 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 8 分钟&nbsp;<span id="/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" class="leancloud_visitors" data-flag-title="">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
-                    <span>Contents</span>
+                    <span>目录</span>
                     <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
                 </div>
                 <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
   <ul>
-    <li><a href="#进程创建">进程创建</a>
+    <li><a href="#4_linux进程控制">4_Linux进程控制</a>
       <ul>
-        <li><a href="#fork创建子进程做了什么">fork创建子进程做了什么？</a></li>
-        <li><a href="#父子进程分离数据的方式写时拷贝">父子进程分离数据的方式：写时拷贝</a></li>
-        <li><a href="#有关程序计数器和eip寄存器">有关程序计数器和EIP寄存器：</a></li>
-        <li><a href="#fork常规用法">fork常规用法</a></li>
-        <li><a href="#fork什么时候会失败">fork什么时候会失败？</a></li>
-        <li><a href="#vfork">vfork</a></li>
-      </ul>
-    </li>
-    <li><a href="#进程终止">进程终止</a>
-      <ul>
-        <li><a href="#进程终止时操作系统做了什么">进程终止时，操作系统做了什么？</a></li>
-        <li><a href="#进程终止的分类情况">进程终止的分类情况</a></li>
-        <li><a href="#进程退出码">进程退出码</a></li>
-        <li><a href="#用代码如何终止一个进程">用代码如何终止一个进程</a></li>
-        <li><a href="#exit-vs-_exit">exit vs _exit</a></li>
-      </ul>
-    </li>
-    <li><a href="#进程等待">进程等待</a>
-      <ul>
-        <li><a href="#需要进行进程等待的原因">需要进行进程等待的原因</a></li>
-        <li><a href="#父进程进程等待的方式">父进程进程等待的方式</a></li>
-      </ul>
-    </li>
-    <li><a href="#进程程序替换">进程程序替换</a>
-      <ul>
-        <li><a href="#进程程序替换的概念原理">进程程序替换的概念+原理</a></li>
-        <li><a href="#exec系列-进程替换接口函数">exec系列-进程替换接口函数</a></li>
+        <li><a href="#进程创建">进程创建</a>
+          <ul>
+            <li><a href="#fork创建子进程做了什么">fork创建子进程做了什么？</a></li>
+            <li><a href="#父子进程分离数据的方式写时拷贝">父子进程分离数据的方式：写时拷贝</a></li>
+            <li><a href="#有关程序计数器和eip寄存器">有关程序计数器和EIP寄存器：</a></li>
+            <li><a href="#fork常规用法">fork常规用法</a></li>
+            <li><a href="#fork什么时候会失败">fork什么时候会失败？</a></li>
+            <li><a href="#vfork">vfork</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程终止">进程终止</a>
+          <ul>
+            <li><a href="#进程终止时操作系统做了什么">进程终止时，操作系统做了什么？</a></li>
+            <li><a href="#进程终止的分类情况">进程终止的分类情况</a></li>
+            <li><a href="#进程退出码">进程退出码</a></li>
+            <li><a href="#用代码如何终止一个进程">用代码如何终止一个进程</a></li>
+            <li><a href="#exit-vs-_exit">exit vs _exit</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程等待">进程等待</a>
+          <ul>
+            <li><a href="#需要进行进程等待的原因">需要进行进程等待的原因</a></li>
+            <li><a href="#父进程进程等待的方式">父进程进程等待的方式</a></li>
+          </ul>
+        </li>
+        <li><a href="#进程程序替换">进程程序替换</a>
+          <ul>
+            <li><a href="#进程程序替换的概念原理">进程程序替换的概念+原理</a></li>
+            <li><a href="#exec系列-进程替换接口函数">exec系列-进程替换接口函数</a></li>
+          </ul>
+        </li>
       </ul>
     </li>
   </ul>
@@ -321,14 +297,12 @@ execve是真正的系统调用函数（man 2），上面的六个函数都是对
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>Updated on 0001-01-01</span>
+                <span>更新于 0001-01-01</span>
             </div></div>
         <div class="post-info-line">
-            <div class="post-info-md"><span>
-                            <a class="link-to-markdown" href="/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/index.md" target="_blank">Read Markdown</a>
-                        </span></div>
+            <div class="post-info-md"></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" data-title="" data-via="xxxx"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" data-title=""><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" data-title=""><i data-svg-src="/lib/simple-icons/icons/line.min.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://example.org/linux4_linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6/" data-title=""><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+                <span></span>
             </div>
         </div>
     </div>
@@ -336,24 +310,25 @@ execve是真正的系统调用函数（man 2），上面的六个函数都是对
     <div class="post-info-more">
         <section class="post-tags"></section>
         <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
         </section>
     </div>
 
     <div class="post-nav"><a href="/linux5_gcc%E7%BC%96%E8%AF%91%E7%9A%84%E8%BF%87%E7%A8%8B%E5%8A%A8%E9%9D%99%E6%80%81%E5%BA%93/" class="prev" rel="prev" title=""><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i></a>
             <a href="/linux3_linux%E8%BF%9B%E7%A8%8B%E6%A6%82%E5%BF%B5/" class="next" rel="next" title=""><i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
 </div>
-</article></div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
             </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.115.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
-                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2019 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">xxxx</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">PTE</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
         </div>
     </footer></div>
 
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
                 <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
                 <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
             </a>
-        </div><link rel="stylesheet" href="/lib/katex/katex.min.css"><link rel="stylesheet" href="/lib/cookieconsent/cookieconsent.min.css"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript" src="/lib/katex/katex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/auto-render.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/copy-tex.min.js"></script><script type="text/javascript" src="/lib/katex/contrib/mhchem.min.js"></script><script type="text/javascript" src="/lib/cookieconsent/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"cookieconsent":{"content":{"dismiss":"Got it!","link":"Learn more","message":"This website uses Cookies to improve your experience."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"valine":{"appId":"cIRpq8figzQxyGz5LyAdUahJ-gzGzoHsz","appKey":"T9YWfgGhznKaXXx7TCLxzS3C","avatar":"robohash","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":true,"highlight":true,"lang":true,"meta":true,"pageSize":true,"placeholder":"说点什么吧...","recordIP":true,"visitor":true}},"data":{"id-1":"PTE","id-2":"PTE"},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.zh-cn","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
 </html>
